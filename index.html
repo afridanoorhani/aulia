@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apotek Inventory Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css?v=6">
+</head>
+<body>
+    <!-- Login Screen -->
+    <div id="login-screen" class="login-screen">
+        <div class="login-card glass-panel">
+            <div class="text-center" style="margin-bottom: 20px;">
+                <div class="logo-icon" style="font-size: 40px;">🏥</div>
+                <h2 style="font-size: 1.2rem; margin-bottom: 5px;">INSTALASI FARMASI<br>KLINIK AULIA</h2>
+                <p style="color: var(--gray); font-size: 0.85rem;">Silakan login untuk melanjutkan</p>
+            </div>
+            <form id="form-login">
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="login-username" required placeholder="admin / apoteker / petugas / pemilik">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="login-password" required placeholder="1234">
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Masuk</button>
+            </form>
+            <div id="login-error" style="color: var(--danger); margin-top: 10px; font-size: 0.85rem; text-align: center; display: none;">Username atau password salah!</div>
+        </div>
+    </div>
+
+    <!-- Main App (Hidden initially) -->
+    <div class="app-container" id="app-container" style="display: none;">
+        <!-- Mobile Sidebar Overlay -->
+        <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header" style="flex-direction: column; align-items: flex-start; gap: 5px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div class="logo-icon">🏥</div>
+                    <h2 style="font-size: 1rem; line-height: 1.2;">INSTALASI FARMASI<br>KLINIK AULIA</h2>
+                </div>
+                <div style="margin-top: 10px; font-size: 0.75rem; color: var(--gray); line-height: 1.4;">
+                    <strong>Alamat:</strong><br>
+                    Jln. Pelda Bunawar Ds. Pualam Sari<br>Kec. Binuang Kab. Tapin 71183<br><br>
+                    <strong>Apoteker:</strong><br>
+                    apt. Afrida Noor Hani, S.Farm<br>
+                    <strong>SIPA:</strong> NR63052603010772
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <!-- Dashboard is visible to all -->
+                <a href="#" class="nav-item active" data-target="dashboard" data-roles="admin,apoteker,petugas,pemilik">Dashboard</a>
+                
+                <!-- Master Obat is visible to admin, apoteker, pemilik -->
+                <a href="#" class="nav-item" data-target="master" data-roles="admin,apoteker,pemilik">Master Obat</a>
+                
+                <!-- Inbound is visible to admin, apoteker -->
+                <a href="#" class="nav-item" data-target="inbound" data-roles="admin,apoteker">Barang Masuk</a>
+                
+                <!-- Outbound is visible to admin, apoteker, petugas -->
+                <a href="#" class="nav-item" data-target="outbound" data-roles="admin,apoteker,petugas">Barang Keluar</a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="topbar">
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <button id="btn-mobile-menu" class="btn-mobile-menu">☰</button>
+                    <h1 id="page-title">Dashboard</h1>
+                </div>
+                <div class="user-profile" style="display: flex; align-items: center; gap: 15px;">
+                    <div style="text-align: right;">
+                        <div id="user-name-display" style="font-weight: 600; font-size: 0.9rem;">Admin</div>
+                        <div id="user-role-display" style="font-size: 0.75rem; color: var(--gray); text-transform: capitalize;">Super Admin</div>
+                    </div>
+                    <div class="avatar" id="user-avatar-display">A</div>
+                    <button id="btn-logout" class="btn btn-danger" style="padding: 6px 12px; font-size: 0.85rem; margin-left: 10px;">Logout</button>
+                </div>
+            </header>
+
+            <div class="content-area">
+                <!-- Dashboard Section -->
+                <section id="dashboard" class="page-section active">
+                    <div class="stats-grid">
+                        <div class="stat-card glass-panel">
+                            <div class="stat-icon blue">📦</div>
+                            <div class="stat-info">
+                                <h3>Total Item Obat</h3>
+                                <p id="stat-total-obat">-</p>
+                            </div>
+                        </div>
+                        <div class="stat-card glass-panel">
+                            <div class="stat-icon green">🗓️</div>
+                            <div class="stat-info">
+                                <h3>Total Batch Aktif</h3>
+                                <p id="stat-total-batch">-</p>
+                            </div>
+                        </div>
+                        <div class="stat-card glass-panel warning">
+                            <div class="stat-icon red">⚠️</div>
+                            <div class="stat-info">
+                                <h3>Stok Menipis</h3>
+                                <p id="stat-low-stock">-</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Expiry Warning Table -->
+                    <div class="panel glass-panel" style="margin-top: 20px;">
+                        <h3 style="color: var(--danger); margin-bottom: 15px; font-size: 1.1rem;"><span class="logo-icon">⚠️</span> Peringatan Obat Mendekati Kedaluwarsa (90 Hari)</h3>
+                        <div class="table-responsive">
+                            <table class="table" id="table-expire">
+                                <thead>
+                                    <tr>
+                                        <th>Nama Obat</th>
+                                        <th>Nomor Batch</th>
+                                        <th>Tgl Kedaluwarsa</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td colspan="4" class="text-center">Tidak ada obat yang mendekati masa kedaluwarsa.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Master Obat Section -->
+                <section id="master" class="page-section">
+                    <div class="panel glass-panel">
+                        <div class="panel-header">
+                            <h2>Daftar Obat</h2>
+                            <!-- Only admin and apoteker can add -->
+                            <button id="btn-add-master" class="btn btn-primary" data-roles="admin,apoteker">+ Tambah Obat Baru</button>
+                        </div>
+                        <div class="table-container">
+                            <table id="table-master">
+                                <thead>
+                                    <tr>
+                                        <th>ID Obat</th>
+                                        <th>Nama Obat</th>
+                                        <th>Kategori</th>
+                                        <th>Satuan</th>
+                                        <th>Stok Min.</th>
+                                        <th>Stok Saat Ini</th>
+                                        <th class="admin-only" data-roles="admin">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td colspan="7" class="text-center">Memuat data...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Inbound Section -->
+                <section id="inbound" class="page-section">
+                    <div class="panel glass-panel form-panel">
+                        <h2>Catat Barang Masuk</h2>
+                        <form id="form-inbound">
+                            <div class="form-group">
+                                <label>Pilih Obat</label>
+                                <select id="in-obat" required></select>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Nomor Batch</label>
+                                    <input type="text" id="in-batch" required placeholder="BCH-XXX">
+                                </div>
+                                <div class="form-group">
+                                    <label>Tanggal Kedaluwarsa</label>
+                                    <input type="date" id="in-expired" required>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Jumlah Masuk</label>
+                                    <input type="number" id="in-jumlah" required min="1">
+                                </div>
+                                <div class="form-group">
+                                    <label>Keterangan</label>
+                                    <input type="text" id="in-ket" placeholder="Supplier, faktur, dll">
+                                </div>
+                            </div>
+                            <!-- Only admin and apoteker -->
+                            <button type="submit" class="btn btn-primary" id="btn-submit-inbound" data-roles="admin,apoteker">Simpan Transaksi</button>
+                        </form>
+                    </div>
+                </section>
+
+                <!-- Outbound Section -->
+                <section id="outbound" class="page-section">
+                    <div class="panel glass-panel form-panel">
+                        <h2>Catat Barang Keluar</h2>
+                        <form id="form-outbound">
+                            <div class="form-group">
+                                <label>Pilih Obat</label>
+                                <select id="out-obat" required></select>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Jumlah Keluar</label>
+                                    <input type="number" id="out-jumlah" required min="1">
+                                </div>
+                                <div class="form-group">
+                                    <label>Keterangan</label>
+                                    <input type="text" id="out-ket" placeholder="Penjualan, retur, dll">
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-danger" id="btn-submit-outbound" data-roles="admin,apoteker,petugas">Proses Barang Keluar</button>
+                        </form>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal Form Master Obat -->
+    <div id="modal-master" class="modal">
+        <div class="modal-content glass-panel">
+            <span class="close-modal">&times;</span>
+            <h2>Tambah Master Obat</h2>
+            <form id="form-master">
+                <div class="form-group">
+                    <label>Nama Obat</label>
+                    <input type="text" id="m-nama" required>
+                </div>
+                <div class="form-group">
+                    <label>Kategori</label>
+                    <select id="m-kategori">
+                        <option value="Bebas">Obat Bebas</option>
+                        <option value="Resep">Obat Resep</option>
+                        <option value="Vitamin">Vitamin</option>
+                        <option value="Alkes">Alat Kesehatan</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Satuan</label>
+                        <input type="text" id="m-satuan" placeholder="Strip, Botol, Box" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Stok Minimum</label>
+                        <input type="number" id="m-stokmin" value="10" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Foto Obat (Opsional)</label>
+                    <input type="file" id="m-foto" accept="image/*">
+                </div>
+                <button type="submit" class="btn btn-primary" id="btn-submit-master">Simpan Master Obat</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Form Edit Master Obat -->
+    <div id="modal-edit-master" class="modal">
+        <div class="modal-content glass-panel">
+            <span class="close-modal">&times;</span>
+            <h2>Edit Master Obat</h2>
+            <form id="form-edit-master">
+                <input type="hidden" id="edit-id-obat">
+                <div class="form-group">
+                    <label>Nama Obat</label>
+                    <input type="text" id="edit-nama" required>
+                </div>
+                <div class="form-group">
+                    <label>Kategori</label>
+                    <select id="edit-kategori">
+                        <option value="Bebas">Obat Bebas</option>
+                        <option value="Resep">Obat Resep</option>
+                        <option value="Vitamin">Vitamin</option>
+                        <option value="Alkes">Alat Kesehatan</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Satuan</label>
+                        <input type="text" id="edit-satuan" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Stok Minimum</label>
+                        <input type="number" id="edit-stokmin" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Ganti Foto (Kosongkan jika tidak ingin ganti)</label>
+                    <input type="file" id="edit-foto" accept="image/*">
+                </div>
+                <button type="submit" class="btn btn-primary" id="btn-submit-edit-master">Simpan Perubahan</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/api.js?v=7"></script>
+    <script src="js/app.js?v=7"></script>
+</body>
+</html>
