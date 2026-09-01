@@ -156,17 +156,69 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
 
                 let lowStockCount = 0;
+                const lowStockTbody = document.querySelector('#table-lowstock tbody');
+                let lowStockHtml = '';
+
                 masterData.forEach(item => {
                     const currStock = stockMap[item.id_obat] || 0;
                     const stokMin = parseInt(item.stok_minimum) || 0;
                     if(currStock <= stokMin) {
                         lowStockCount++;
+                        lowStockHtml += `
+                            <tr>
+                                <td>${item.nama_obat}</td>
+                                <td><strong style="color:var(--danger);">${currStock}</strong></td>
+                                <td>${stokMin}</td>
+                                <td><span style="background:var(--danger); color:white; padding:2px 8px; border-radius:4px; font-size:0.8rem;">Stok Kritis</span></td>
+                            </tr>
+                        `;
                     }
                 });
 
                 document.getElementById('stat-total-obat').innerText = masterData.length;
                 document.getElementById('stat-total-batch').innerText = batchData.length;
                 document.getElementById('stat-low-stock').innerText = lowStockCount;
+
+                if (lowStockTbody) {
+                    lowStockTbody.innerHTML = lowStockHtml || '<tr><td colspan="4" class="text-center">Semua stok aman.</td></tr>';
+                }
+
+                // Render Riwayat Transaksi
+                const riwayatTbody = document.querySelector('#table-riwayat tbody');
+                if (riwayatTbody) {
+                    if (transData.length === 0) {
+                        riwayatTbody.innerHTML = '<tr><td colspan="5" class="text-center">Belum ada riwayat transaksi</td></tr>';
+                    } else {
+                        const reversedTrans = [...transData].reverse();
+                        let riwayatHtml = '';
+                        reversedTrans.forEach(t => {
+                            const obat = masterData.find(m => m.id_obat === t.id_obat);
+                            const namaObat = obat ? obat.nama_obat : t.id_obat;
+                            const badge = t.tipe === 'Masuk' ? 
+                                '<span style="background:#10b981; color:white; padding:2px 8px; border-radius:4px; font-size:0.8rem;">Masuk</span>' : 
+                                '<span style="background:#ef4444; color:white; padding:2px 8px; border-radius:4px; font-size:0.8rem;">Keluar</span>';
+                            
+                            let timeStr = t.timestamp;
+                            if(timeStr) {
+                                try {
+                                    const d = new Date(timeStr);
+                                    timeStr = d.toLocaleDateString('id-ID', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+                                } catch(e) {}
+                            }
+
+                            riwayatHtml += `
+                                <tr>
+                                    <td>${timeStr || '-'}</td>
+                                    <td>${badge}</td>
+                                    <td>${namaObat}</td>
+                                    <td>${t.jumlah}</td>
+                                    <td>${t.keterangan || '-'}</td>
+                                </tr>
+                            `;
+                        });
+                        riwayatTbody.innerHTML = riwayatHtml;
+                    }
+                }
 
                 // Hitung Obat Kadaluwarsa
                 const expireTbody = document.querySelector('#table-expire tbody');
@@ -206,10 +258,12 @@ document.addEventListener('DOMContentLoaded', () => {
                                 '<span style="background:var(--danger); color:white; padding:2px 8px; border-radius:4px; font-size:0.8rem;">Sudah Kedaluwarsa</span>' : 
                                 '<span style="background:#f59e0b; color:white; padding:2px 8px; border-radius:4px; font-size:0.8rem;">Segera Kedaluwarsa</span>';
                             
+                            const formattedDate = b.expDate.toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' });
+                            
                             tr.innerHTML = `
                                 <td>${b.nama_obat}</td>
                                 <td>${b.no_batch}</td>
-                                <td>${b.tanggal_expired}</td>
+                                <td>${formattedDate}</td>
                                 <td>${statusBadge}</td>
                             `;
                             expireTbody.appendChild(tr);
@@ -275,7 +329,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (userRole === 'admin') {
                         aksiCol = `
                             <td>
-                                <button class="btn btn-primary btn-sm btn-edit" style="padding: 2px 8px; font-size: 0.8rem;" data-id="${item.id_obat}" data-nama="${item.nama_obat}" data-kategori="${item.kategori}" data-satuan="${item.satuan}" data-stokmin="${item.stok_minimum}">✏️</button>
+                                <button class="btn btn-primary btn-sm btn-edit" style="padding: 2px 8px; font-size: 0.8rem;" 
+                                    data-id="${item.id_obat}" 
+                                    data-nama="${item.nama_obat}" 
+                                    data-kategori="${item.kategori}" 
+                                    data-golongan="${item.golongan || ''}" 
+                                    data-komposisi="${item.komposisi || ''}" 
+                                    data-kekuatan="${item.kekuatan || ''}" 
+                                    data-bentuk="${item.bentuk_sediaan || ''}" 
+                                    data-besar="${item.satuan_besar || ''}" 
+                                    data-kecil="${item.satuan_kecil || ''}" 
+                                    data-stokmin="${item.stok_minimum}">✏️</button>
                                 <button class="btn btn-danger btn-sm btn-delete" style="padding: 2px 8px; font-size: 0.8rem; margin-left: 5px;" data-id="${item.id_obat}">🗑️</button>
                             </td>
                         `;
@@ -290,7 +354,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             </div>
                         </td>
                         <td>${item.kategori}</td>
-                        <td>${item.satuan}</td>
+                        <td>${item.satuan_besar || '-'} / ${item.satuan_kecil || '-'}</td>
                         <td>${item.stok_minimum}</td>
                         <td style="color: ${isLow ? 'var(--danger)' : 'inherit'}; font-weight: 600;">${currStock}</td>
                         ${aksiCol}
@@ -338,12 +402,35 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('edit-id-obat').value = btnEdit.getAttribute('data-id');
             document.getElementById('edit-nama').value = btnEdit.getAttribute('data-nama');
             document.getElementById('edit-kategori').value = btnEdit.getAttribute('data-kategori');
-            document.getElementById('edit-satuan').value = btnEdit.getAttribute('data-satuan');
+            document.getElementById('edit-golongan').value = btnEdit.getAttribute('data-golongan');
+            document.getElementById('edit-komposisi').value = btnEdit.getAttribute('data-komposisi');
+            document.getElementById('edit-kekuatan').value = btnEdit.getAttribute('data-kekuatan');
+            document.getElementById('edit-bentuk').value = btnEdit.getAttribute('data-bentuk');
+            document.getElementById('edit-besar').value = btnEdit.getAttribute('data-besar');
+            document.getElementById('edit-kecil').value = btnEdit.getAttribute('data-kecil');
             document.getElementById('edit-stokmin').value = btnEdit.getAttribute('data-stokmin');
             document.getElementById('modal-edit-master').classList.add('active');
             return;
         }
     });
+
+    // --- Search Master Obat ---
+    const searchMaster = document.getElementById('search-master');
+    if (searchMaster) {
+        searchMaster.addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('#table-master tbody tr');
+            rows.forEach(row => {
+                if(row.children.length === 1) return; // Skip loading/empty rows
+                const text = row.innerText.toLowerCase();
+                if(text.includes(term)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+    }
 
     // --- Form Submissions ---
 
@@ -357,7 +444,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const data = {
             nama_obat: document.getElementById('m-nama').value,
             kategori: document.getElementById('m-kategori').value,
-            satuan: document.getElementById('m-satuan').value,
+            golongan: document.getElementById('m-golongan').value,
+            komposisi: document.getElementById('m-komposisi').value,
+            kekuatan: document.getElementById('m-kekuatan').value,
+            bentuk_sediaan: document.getElementById('m-bentuk').value,
+            satuan_besar: document.getElementById('m-besar').value,
+            satuan_kecil: document.getElementById('m-kecil').value,
             stok_minimum: document.getElementById('m-stokmin').value,
             url_foto: ''
         };
@@ -399,7 +491,12 @@ document.addEventListener('DOMContentLoaded', () => {
             id_obat: document.getElementById('edit-id-obat').value,
             nama_obat: document.getElementById('edit-nama').value,
             kategori: document.getElementById('edit-kategori').value,
-            satuan: document.getElementById('edit-satuan').value,
+            golongan: document.getElementById('edit-golongan').value,
+            komposisi: document.getElementById('edit-komposisi').value,
+            kekuatan: document.getElementById('edit-kekuatan').value,
+            bentuk_sediaan: document.getElementById('edit-bentuk').value,
+            satuan_besar: document.getElementById('edit-besar').value,
+            satuan_kecil: document.getElementById('edit-kecil').value,
             stok_minimum: document.getElementById('edit-stokmin').value
         };
 

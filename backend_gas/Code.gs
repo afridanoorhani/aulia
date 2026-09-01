@@ -96,7 +96,12 @@ function addMasterObat(data) {
     id_obat,
     data.nama_obat || '',
     data.kategori || '',
-    data.satuan || '',
+    data.golongan || '',
+    data.komposisi || '',
+    data.kekuatan || '',
+    data.bentuk_sediaan || '',
+    data.satuan_besar || '',
+    data.satuan_kecil || '',
     data.stok_minimum || 0,
     data.url_foto || ''
   ]);
@@ -114,11 +119,16 @@ function editMasterObat(data) {
       
       const nama = data.nama_obat !== undefined ? data.nama_obat : values[i][1];
       const kategori = data.kategori !== undefined ? data.kategori : values[i][2];
-      const satuan = data.satuan !== undefined ? data.satuan : values[i][3];
-      const stok_min = data.stok_minimum !== undefined ? data.stok_minimum : values[i][4];
-      const url_foto = data.url_foto !== undefined ? data.url_foto : values[i][5];
+      const golongan = data.golongan !== undefined ? data.golongan : values[i][3];
+      const komposisi = data.komposisi !== undefined ? data.komposisi : values[i][4];
+      const kekuatan = data.kekuatan !== undefined ? data.kekuatan : values[i][5];
+      const bentuk_sediaan = data.bentuk_sediaan !== undefined ? data.bentuk_sediaan : values[i][6];
+      const satuan_besar = data.satuan_besar !== undefined ? data.satuan_besar : values[i][7];
+      const satuan_kecil = data.satuan_kecil !== undefined ? data.satuan_kecil : values[i][8];
+      const stok_min = data.stok_minimum !== undefined ? data.stok_minimum : values[i][9];
+      const url_foto = data.url_foto !== undefined ? data.url_foto : values[i][10];
       
-      sheet.getRange(rowNum, 2, 1, 5).setValues([[nama, kategori, satuan, stok_min, url_foto]]);
+      sheet.getRange(rowNum, 2, 1, 10).setValues([[nama, kategori, golongan, komposisi, kekuatan, bentuk_sediaan, satuan_besar, satuan_kecil, stok_min, url_foto]]);
       return createJsonResponse({ status: 'success', message: 'Master obat berhasil diubah' });
     }
   }

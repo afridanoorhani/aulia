@@ -2,17 +2,17 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
     <title>Apotek Inventory Dashboard</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css?v=6">
+    <link rel="stylesheet" href="css/style.css?v=13">
 </head>
 <body>
     <!-- Login Screen -->
     <div id="login-screen" class="login-screen">
         <div class="login-card glass-panel">
             <div class="text-center" style="margin-bottom: 20px;">
-                <div class="logo-icon" style="font-size: 40px;">🏥</div>
+                <img src="img/logo.jpeg" alt="Logo Klinik Aulia" style="width: 80px; height: auto; margin-bottom: 15px; border-radius: 12px;">
                 <h2 style="font-size: 1.2rem; margin-bottom: 5px;">INSTALASI FARMASI<br>KLINIK AULIA</h2>
                 <p style="color: var(--gray); font-size: 0.85rem;">Silakan login untuk melanjutkan</p>
             </div>
@@ -40,7 +40,7 @@
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header" style="flex-direction: column; align-items: flex-start; gap: 5px;">
                 <div style="display: flex; align-items: center; gap: 10px;">
-                    <div class="logo-icon">🏥</div>
+                    <img src="img/logo.jpeg" alt="Logo Klinik Aulia" style="width: 36px; height: 36px; border-radius: 8px; object-fit: cover;">
                     <h2 style="font-size: 1rem; line-height: 1.2;">INSTALASI FARMASI<br>KLINIK AULIA</h2>
                 </div>
                 <div style="margin-top: 10px; font-size: 0.75rem; color: var(--gray); line-height: 1.4;">
@@ -63,6 +63,9 @@
                 
                 <!-- Outbound is visible to admin, apoteker, petugas -->
                 <a href="#" class="nav-item" data-target="outbound" data-roles="admin,apoteker,petugas">Barang Keluar</a>
+                
+                <!-- Riwayat Transaksi is visible to admin, apoteker, pemilik -->
+                <a href="#" class="nav-item" data-target="riwayat" data-roles="admin,apoteker,pemilik">Riwayat Transaksi</a>
             </nav>
         </aside>
 
@@ -112,7 +115,7 @@
 
                     <!-- Expiry Warning Table -->
                     <div class="panel glass-panel" style="margin-top: 20px;">
-                        <h3 style="color: var(--danger); margin-bottom: 15px; font-size: 1.1rem;"><span class="logo-icon">⚠️</span> Peringatan Obat Mendekati Kedaluwarsa (90 Hari)</h3>
+                        <h3 style="color: var(--danger); margin-bottom: 15px; font-size: 1.1rem;">⚠️ Peringatan Obat Mendekati Kedaluwarsa (90 Hari)</h3>
                         <div class="table-responsive">
                             <table class="table" id="table-expire">
                                 <thead>
@@ -129,15 +132,37 @@
                             </table>
                         </div>
                     </div>
+
+                    <!-- Low Stock Warning Table -->
+                    <div class="panel glass-panel" style="margin-top: 20px;">
+                        <h3 style="color: #d97706; margin-bottom: 15px; font-size: 1.1rem;">⚠️ Daftar Obat Harus Dibeli (Stok Menipis)</h3>
+                        <div class="table-responsive">
+                            <table class="table" id="table-lowstock">
+                                <thead>
+                                    <tr>
+                                        <th>Nama Obat</th>
+                                        <th>Sisa Stok</th>
+                                        <th>Batas Minimum</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td colspan="4" class="text-center">Memuat data...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </section>
 
                 <!-- Master Obat Section -->
                 <section id="master" class="page-section">
                     <div class="panel glass-panel">
-                        <div class="panel-header">
+                        <div class="panel-header" style="flex-wrap: wrap;">
                             <h2>Daftar Obat</h2>
-                            <!-- Only admin and apoteker can add -->
-                            <button id="btn-add-master" class="btn btn-primary" data-roles="admin,apoteker">+ Tambah Obat Baru</button>
+                            <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center; justify-content: flex-start; width: 100%; max-width: 500px; margin-top: 10px;">
+                                <input type="text" id="search-master" placeholder="Cari Nama Obat..." style="flex: 1; min-width: 200px;">
+                                <button id="btn-add-master" class="btn btn-primary" data-roles="admin,apoteker">+ Tambah Obat Baru</button>
+                            </div>
                         </div>
                         <div class="table-container">
                             <table id="table-master">
@@ -218,6 +243,31 @@
                         </form>
                     </div>
                 </section>
+
+                <!-- Riwayat Transaksi Section -->
+                <section id="riwayat" class="page-section">
+                    <div class="panel glass-panel">
+                        <div class="panel-header">
+                            <h2>Riwayat Transaksi</h2>
+                        </div>
+                        <div class="table-container">
+                            <table id="table-riwayat">
+                                <thead>
+                                    <tr>
+                                        <th>Waktu Transaksi</th>
+                                        <th>Tipe</th>
+                                        <th>Nama Obat</th>
+                                        <th>Jumlah</th>
+                                        <th>Keterangan</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td colspan="5" class="text-center">Memuat data...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
             </div>
         </main>
     </div>
@@ -232,23 +282,211 @@
                     <label>Nama Obat</label>
                     <input type="text" id="m-nama" required>
                 </div>
-                <div class="form-group">
-                    <label>Kategori</label>
-                    <select id="m-kategori">
-                        <option value="Bebas">Obat Bebas</option>
-                        <option value="Resep">Obat Resep</option>
-                        <option value="Vitamin">Vitamin</option>
-                        <option value="Alkes">Alat Kesehatan</option>
-                    </select>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Kategori</label>
+                        <select id="m-kategori" required>
+                            <option value="OBAT">OBAT</option>
+                            <option value="ALKES">ALKES</option>
+                            <option value="REAGEN">REAGEN</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Golongan</label>
+                        <select id="m-golongan">
+                            <option value="-">-</option>
+                            <option value="Narkotik">Narkotik</option>
+                            <option value="Psikotropik">Psikotropik</option>
+                            <option value="Keras">Keras</option>
+                            <option value="Bebas Terbatas">Bebas Terbatas</option>
+                            <option value="Bebas">Bebas</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label>Satuan</label>
-                        <input type="text" id="m-satuan" placeholder="Strip, Botol, Box" required>
+                        <label>Komposisi</label>
+                        <input type="text" id="m-komposisi">
+                    </div>
+                    <div class="form-group">
+                        <label>Kekuatan</label>
+                        <input type="text" id="m-kekuatan">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Bentuk Sediaan</label>
+                        <select id="m-bentuk">
+
+                        <option value="Tablet">Tablet</option>
+                        <option value="Kaplet">Kaplet</option>
+                        <option value="Kapsul">Kapsul</option>
+                        <option value="Sirup">Sirup</option>
+                        <option value="Sirup Kering">Sirup Kering</option>
+                        <option value="Eliksir">Eliksir</option>
+                        <option value="Emulsi">Emulsi</option>
+                        <option value="Suspensi">Suspensi</option>
+                        <option value="Serbuk Oral">Serbuk Oral</option>
+                        <option value="Granula">Granula</option>
+                        <option value="Tetes Oral">Tetes Oral</option>
+                        <option value="Obat Kumur">Obat Kumur</option>
+                        <option value="Oral Spray">Oral Spray</option>
+                        <option value="Cream">Cream</option>
+                        <option value="Salep">Salep</option>
+                        <option value="Salep Mata">Salep Mata</option>
+                        <option value="Gel">Gel</option>
+                        <option value="Gel Mata">Gel Mata</option>
+                        <option value="Pasta">Pasta</option>
+                        <option value="Sampo">Sampo</option>
+                        <option value="Serbuk Obat Luar / Serbuk Tabur">Serbuk Obat Luar / Serbuk Tabur</option>
+                        <option value="Suspensi / Cairan Obat Luar">Suspensi / Cairan Obat Luar</option>
+                        <option value="Patch">Patch</option>
+                        <option value="Tulle / Plester Obat">Tulle / Plester Obat</option>
+                        <option value="Tetes Mata">Tetes Mata</option>
+                        <option value="Tetes Telinga">Tetes Telinga</option>
+                        <option value="Tetes Hidung">Tetes Hidung</option>
+                        <option value="Tetes Mata dan Telinga">Tetes Mata dan Telinga</option>
+                        <option value="Cairan Mata">Cairan Mata</option>
+                        <option value="Injeksi">Injeksi</option>
+                        <option value="Larutan Injeksi">Larutan Injeksi</option>
+                        <option value="Serbuk Injeksi">Serbuk Injeksi</option>
+                        <option value="Serbuk Injeksi Liofilisasi">Serbuk Injeksi Liofilisasi</option>
+                        <option value="Suspensi Injeksi">Suspensi Injeksi</option>
+                        <option value="Infus">Infus</option>
+                        <option value="Cairan Steril">Cairan Steril</option>
+                        <option value="Serbuk Infus">Serbuk Infus</option>
+                        <option value="Aerosol Metered Dose">Aerosol Metered Dose</option>
+                        <option value="Aerosol Spray">Aerosol Spray</option>
+                        <option value="Larutan Inhalasi">Larutan Inhalasi</option>
+                        <option value="Suspensi Inhalasi">Suspensi Inhalasi</option>
+                        <option value="Serbuk Inhaler">Serbuk Inhaler</option>
+                        <option value="Respules">Respules</option>
+                        <option value="Turbuhaler">Turbuhaler</option>
+                        <option value="Suppositoria">Suppositoria</option>
+                        <option value="Ovula">Ovula</option>
+                        <option value="Pessary">Pessary</option>
+                        <option value="Vaginal Gel">Vaginal Gel</option>
+                        <option value="Enema">Enema</option>
+                        <option value="Orodispersible Film">Orodispersible Film</option>
+
+                        </select>
                     </div>
                     <div class="form-group">
                         <label>Stok Minimum</label>
-                        <input type="number" id="m-stokmin" value="10" required>
+                        <input type="number" id="m-stokmin" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Satuan Besar</label>
+                        <select id="m-besar">
+
+                        <option value="Tablet">Tablet</option>
+                        <option value="Kaplet">Kaplet</option>
+                        <option value="Kapsul">Kapsul</option>
+                        <option value="Buah">Buah</option>
+                        <option value="Pieces">Pieces</option>
+                        <option value="Units">Units</option>
+                        <option value="Pasang">Pasang</option>
+                        <option value="Lembar">Lembar</option>
+                        <option value="Strip">Strip</option>
+                        <option value="Blister">Blister</option>
+                        <option value="Box">Box</option>
+                        <option value="Dos">Dos</option>
+                        <option value="Pak">Pak</option>
+                        <option value="Paket">Paket</option>
+                        <option value="Sachet">Sachet</option>
+                        <option value="Stickpack">Stickpack</option>
+                        <option value="Pouch">Pouch</option>
+                        <option value="Pot">Pot</option>
+                        <option value="Tube">Tube</option>
+                        <option value="Botol">Botol</option>
+                        <option value="Vial">Vial</option>
+                        <option value="Ampul">Ampul</option>
+                        <option value="Flakon">Flakon</option>
+                        <option value="Flabot">Flabot</option>
+                        <option value="Kantong">Kantong</option>
+                        <option value="Bag">Bag</option>
+                        <option value="Canister">Canister</option>
+                        <option value="Cartridges">Cartridges</option>
+                        <option value="Kit">Kit</option>
+                        <option value="Set">Set</option>
+                        <option value="Kotak">Kotak</option>
+                        <option value="Kaleng">Kaleng</option>
+                        <option value="Labu">Labu</option>
+                        <option value="Roll">Roll</option>
+                        <option value="mcg">mcg</option>
+                        <option value="Miligram">Miligram</option>
+                        <option value="Gram">Gram</option>
+                        <option value="Kg">Kg</option>
+                        <option value="Mililiter">Mililiter</option>
+                        <option value="CC">CC</option>
+                        <option value="Liter">Liter</option>
+                        <option value="Cm">Cm</option>
+
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Satuan Kecil</label>
+                        <select id="m-kecil">
+
+                        <option value="Aerosol Metered Dose">Aerosol Metered Dose</option>
+                        <option value="Aerosol Spray">Aerosol Spray</option>
+                        <option value="Ampul">Ampul</option>
+                        <option value="Cairan Mata">Cairan Mata</option>
+                        <option value="Cairan Steril">Cairan Steril</option>
+                        <option value="Cream">Cream</option>
+                        <option value="Eliksir">Eliksir</option>
+                        <option value="Emulsi">Emulsi</option>
+                        <option value="Enema">Enema</option>
+                        <option value="Gas">Gas</option>
+                        <option value="Gel">Gel</option>
+                        <option value="Gel Mata">Gel Mata</option>
+                        <option value="Granula">Granula</option>
+                        <option value="Infus">Infus</option>
+                        <option value="Injeksi">Injeksi</option>
+                        <option value="Larutan">Larutan</option>
+                        <option value="Larutan Inhalasi">Larutan Inhalasi</option>
+                        <option value="Larutan Injeksi">Larutan Injeksi</option>
+                        <option value="Minidose">Minidose</option>
+                        <option value="Obat Kumur">Obat Kumur</option>
+                        <option value="Oral Spray">Oral Spray</option>
+                        <option value="Orodispersible Film">Orodispersible Film</option>
+                        <option value="Ovula">Ovula</option>
+                        <option value="Pasta">Pasta</option>
+                        <option value="Patch">Patch</option>
+                        <option value="Pessary">Pessary</option>
+                        <option value="Prefilled pen">Prefilled pen</option>
+                        <option value="Prefilled Syringe">Prefilled Syringe</option>
+                        <option value="Respules">Respules</option>
+                        <option value="Salep">Salep</option>
+                        <option value="Salep Mata">Salep Mata</option>
+                        <option value="Sampo">Sampo</option>
+                        <option value="Semprot Hidung">Semprot Hidung</option>
+                        <option value="Serbuk Infus">Serbuk Infus</option>
+                        <option value="Serbuk Inhaler">Serbuk Inhaler</option>
+                        <option value="Serbuk Injeksi">Serbuk Injeksi</option>
+                        <option value="Serbuk Injeksi Liofilisasi">Serbuk Injeksi Liofilisasi</option>
+                        <option value="Serbuk Obat Luar / Serbuk Tabur">Serbuk Obat Luar / Serbuk Tabur</option>
+                        <option value="Serbuk Oral">Serbuk Oral</option>
+                        <option value="Sirup">Sirup</option>
+                        <option value="Sirup Kering">Sirup Kering</option>
+                        <option value="Suppositoria">Suppositoria</option>
+                        <option value="Suspensi">Suspensi</option>
+                        <option value="Suspensi / Cairan Obat Luar">Suspensi / Cairan Obat Luar</option>
+                        <option value="Suspensi Inhalasi">Suspensi Inhalasi</option>
+                        <option value="Suspensi Injeksi">Suspensi Injeksi</option>
+                        <option value="Tablet">Tablet</option>
+                        <option value="Tetes Hidung">Tetes Hidung</option>
+                        <option value="Tetes Mata">Tetes Mata</option>
+                        <option value="Tetes Mata Dan Telinga">Tetes Mata Dan Telinga</option>
+                        <option value="Tetes Oral (Oral Drops)">Tetes Oral (Oral Drops)</option>
+                        <option value="Tetes Telinga">Tetes Telinga</option>
+                        <option value="Tulle/Plester Obat">Tulle/Plester Obat</option>
+                        <option value="Turbuhaler">Turbuhaler</option>
+                        <option value="Vaginal Gel">Vaginal Gel</option>
+                        <option value="Vial">Vial</option>
+                        </select>
                     </div>
                 </div>
                 <div class="form-group">
@@ -267,31 +505,219 @@
             <h2>Edit Master Obat</h2>
             <form id="form-edit-master">
                 <input type="hidden" id="edit-id-obat">
-                <div class="form-group">
+                                <div class="form-group">
                     <label>Nama Obat</label>
                     <input type="text" id="edit-nama" required>
                 </div>
-                <div class="form-group">
-                    <label>Kategori</label>
-                    <select id="edit-kategori">
-                        <option value="Bebas">Obat Bebas</option>
-                        <option value="Resep">Obat Resep</option>
-                        <option value="Vitamin">Vitamin</option>
-                        <option value="Alkes">Alat Kesehatan</option>
-                    </select>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Kategori</label>
+                        <select id="edit-kategori" required>
+                            <option value="OBAT">OBAT</option>
+                            <option value="ALKES">ALKES</option>
+                            <option value="REAGEN">REAGEN</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Golongan</label>
+                        <select id="edit-golongan">
+                            <option value="-">-</option>
+                            <option value="Narkotik">Narkotik</option>
+                            <option value="Psikotropik">Psikotropik</option>
+                            <option value="Keras">Keras</option>
+                            <option value="Bebas Terbatas">Bebas Terbatas</option>
+                            <option value="Bebas">Bebas</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label>Satuan</label>
-                        <input type="text" id="edit-satuan" required>
+                        <label>Komposisi</label>
+                        <input type="text" id="edit-komposisi">
+                    </div>
+                    <div class="form-group">
+                        <label>Kekuatan</label>
+                        <input type="text" id="edit-kekuatan">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Bentuk Sediaan</label>
+                        <select id="edit-bentuk">
+
+                        <option value="Tablet">Tablet</option>
+                        <option value="Kaplet">Kaplet</option>
+                        <option value="Kapsul">Kapsul</option>
+                        <option value="Sirup">Sirup</option>
+                        <option value="Sirup Kering">Sirup Kering</option>
+                        <option value="Eliksir">Eliksir</option>
+                        <option value="Emulsi">Emulsi</option>
+                        <option value="Suspensi">Suspensi</option>
+                        <option value="Serbuk Oral">Serbuk Oral</option>
+                        <option value="Granula">Granula</option>
+                        <option value="Tetes Oral">Tetes Oral</option>
+                        <option value="Obat Kumur">Obat Kumur</option>
+                        <option value="Oral Spray">Oral Spray</option>
+                        <option value="Cream">Cream</option>
+                        <option value="Salep">Salep</option>
+                        <option value="Salep Mata">Salep Mata</option>
+                        <option value="Gel">Gel</option>
+                        <option value="Gel Mata">Gel Mata</option>
+                        <option value="Pasta">Pasta</option>
+                        <option value="Sampo">Sampo</option>
+                        <option value="Serbuk Obat Luar / Serbuk Tabur">Serbuk Obat Luar / Serbuk Tabur</option>
+                        <option value="Suspensi / Cairan Obat Luar">Suspensi / Cairan Obat Luar</option>
+                        <option value="Patch">Patch</option>
+                        <option value="Tulle / Plester Obat">Tulle / Plester Obat</option>
+                        <option value="Tetes Mata">Tetes Mata</option>
+                        <option value="Tetes Telinga">Tetes Telinga</option>
+                        <option value="Tetes Hidung">Tetes Hidung</option>
+                        <option value="Tetes Mata dan Telinga">Tetes Mata dan Telinga</option>
+                        <option value="Cairan Mata">Cairan Mata</option>
+                        <option value="Injeksi">Injeksi</option>
+                        <option value="Larutan Injeksi">Larutan Injeksi</option>
+                        <option value="Serbuk Injeksi">Serbuk Injeksi</option>
+                        <option value="Serbuk Injeksi Liofilisasi">Serbuk Injeksi Liofilisasi</option>
+                        <option value="Suspensi Injeksi">Suspensi Injeksi</option>
+                        <option value="Infus">Infus</option>
+                        <option value="Cairan Steril">Cairan Steril</option>
+                        <option value="Serbuk Infus">Serbuk Infus</option>
+                        <option value="Aerosol Metered Dose">Aerosol Metered Dose</option>
+                        <option value="Aerosol Spray">Aerosol Spray</option>
+                        <option value="Larutan Inhalasi">Larutan Inhalasi</option>
+                        <option value="Suspensi Inhalasi">Suspensi Inhalasi</option>
+                        <option value="Serbuk Inhaler">Serbuk Inhaler</option>
+                        <option value="Respules">Respules</option>
+                        <option value="Turbuhaler">Turbuhaler</option>
+                        <option value="Suppositoria">Suppositoria</option>
+                        <option value="Ovula">Ovula</option>
+                        <option value="Pessary">Pessary</option>
+                        <option value="Vaginal Gel">Vaginal Gel</option>
+                        <option value="Enema">Enema</option>
+                        <option value="Orodispersible Film">Orodispersible Film</option>
+
+                        </select>
                     </div>
                     <div class="form-group">
                         <label>Stok Minimum</label>
                         <input type="number" id="edit-stokmin" required>
                     </div>
                 </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Satuan Besar</label>
+                        <select id="edit-besar">
+
+                        <option value="Tablet">Tablet</option>
+                        <option value="Kaplet">Kaplet</option>
+                        <option value="Kapsul">Kapsul</option>
+                        <option value="Buah">Buah</option>
+                        <option value="Pieces">Pieces</option>
+                        <option value="Units">Units</option>
+                        <option value="Pasang">Pasang</option>
+                        <option value="Lembar">Lembar</option>
+                        <option value="Strip">Strip</option>
+                        <option value="Blister">Blister</option>
+                        <option value="Box">Box</option>
+                        <option value="Dos">Dos</option>
+                        <option value="Pak">Pak</option>
+                        <option value="Paket">Paket</option>
+                        <option value="Sachet">Sachet</option>
+                        <option value="Stickpack">Stickpack</option>
+                        <option value="Pouch">Pouch</option>
+                        <option value="Pot">Pot</option>
+                        <option value="Tube">Tube</option>
+                        <option value="Botol">Botol</option>
+                        <option value="Vial">Vial</option>
+                        <option value="Ampul">Ampul</option>
+                        <option value="Flakon">Flakon</option>
+                        <option value="Flabot">Flabot</option>
+                        <option value="Kantong">Kantong</option>
+                        <option value="Bag">Bag</option>
+                        <option value="Canister">Canister</option>
+                        <option value="Cartridges">Cartridges</option>
+                        <option value="Kit">Kit</option>
+                        <option value="Set">Set</option>
+                        <option value="Kotak">Kotak</option>
+                        <option value="Kaleng">Kaleng</option>
+                        <option value="Labu">Labu</option>
+                        <option value="Roll">Roll</option>
+                        <option value="mcg">mcg</option>
+                        <option value="Miligram">Miligram</option>
+                        <option value="Gram">Gram</option>
+                        <option value="Kg">Kg</option>
+                        <option value="Mililiter">Mililiter</option>
+                        <option value="CC">CC</option>
+                        <option value="Liter">Liter</option>
+                        <option value="Cm">Cm</option>
+
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Satuan Kecil</label>
+                        <select id="edit-kecil">
+
+                        <option value="Aerosol Metered Dose">Aerosol Metered Dose</option>
+                        <option value="Aerosol Spray">Aerosol Spray</option>
+                        <option value="Ampul">Ampul</option>
+                        <option value="Cairan Mata">Cairan Mata</option>
+                        <option value="Cairan Steril">Cairan Steril</option>
+                        <option value="Cream">Cream</option>
+                        <option value="Eliksir">Eliksir</option>
+                        <option value="Emulsi">Emulsi</option>
+                        <option value="Enema">Enema</option>
+                        <option value="Gas">Gas</option>
+                        <option value="Gel">Gel</option>
+                        <option value="Gel Mata">Gel Mata</option>
+                        <option value="Granula">Granula</option>
+                        <option value="Infus">Infus</option>
+                        <option value="Injeksi">Injeksi</option>
+                        <option value="Larutan">Larutan</option>
+                        <option value="Larutan Inhalasi">Larutan Inhalasi</option>
+                        <option value="Larutan Injeksi">Larutan Injeksi</option>
+                        <option value="Minidose">Minidose</option>
+                        <option value="Obat Kumur">Obat Kumur</option>
+                        <option value="Oral Spray">Oral Spray</option>
+                        <option value="Orodispersible Film">Orodispersible Film</option>
+                        <option value="Ovula">Ovula</option>
+                        <option value="Pasta">Pasta</option>
+                        <option value="Patch">Patch</option>
+                        <option value="Pessary">Pessary</option>
+                        <option value="Prefilled pen">Prefilled pen</option>
+                        <option value="Prefilled Syringe">Prefilled Syringe</option>
+                        <option value="Respules">Respules</option>
+                        <option value="Salep">Salep</option>
+                        <option value="Salep Mata">Salep Mata</option>
+                        <option value="Sampo">Sampo</option>
+                        <option value="Semprot Hidung">Semprot Hidung</option>
+                        <option value="Serbuk Infus">Serbuk Infus</option>
+                        <option value="Serbuk Inhaler">Serbuk Inhaler</option>
+                        <option value="Serbuk Injeksi">Serbuk Injeksi</option>
+                        <option value="Serbuk Injeksi Liofilisasi">Serbuk Injeksi Liofilisasi</option>
+                        <option value="Serbuk Obat Luar / Serbuk Tabur">Serbuk Obat Luar / Serbuk Tabur</option>
+                        <option value="Serbuk Oral">Serbuk Oral</option>
+                        <option value="Sirup">Sirup</option>
+                        <option value="Sirup Kering">Sirup Kering</option>
+                        <option value="Suppositoria">Suppositoria</option>
+                        <option value="Suspensi">Suspensi</option>
+                        <option value="Suspensi / Cairan Obat Luar">Suspensi / Cairan Obat Luar</option>
+                        <option value="Suspensi Inhalasi">Suspensi Inhalasi</option>
+                        <option value="Suspensi Injeksi">Suspensi Injeksi</option>
+                        <option value="Tablet">Tablet</option>
+                        <option value="Tetes Hidung">Tetes Hidung</option>
+                        <option value="Tetes Mata">Tetes Mata</option>
+                        <option value="Tetes Mata Dan Telinga">Tetes Mata Dan Telinga</option>
+                        <option value="Tetes Oral (Oral Drops)">Tetes Oral (Oral Drops)</option>
+                        <option value="Tetes Telinga">Tetes Telinga</option>
+                        <option value="Tulle/Plester Obat">Tulle/Plester Obat</option>
+                        <option value="Turbuhaler">Turbuhaler</option>
+                        <option value="Vaginal Gel">Vaginal Gel</option>
+                        <option value="Vial">Vial</option>
+                        </select>
+                    </div>
+                </div>
                 <div class="form-group">
-                    <label>Ganti Foto (Kosongkan jika tidak ingin ganti)</label>
+                    <label>Foto Obat (Opsional)</label>
                     <input type="file" id="edit-foto" accept="image/*">
                 </div>
                 <button type="submit" class="btn btn-primary" id="btn-submit-edit-master">Simpan Perubahan</button>
@@ -299,7 +725,7 @@
         </div>
     </div>
 
-    <script src="js/api.js?v=7"></script>
-    <script src="js/app.js?v=7"></script>
+    <script src="js/api.js?v=18"></script>
+    <script src="js/app.js?v=18"></script>
 </body>
 </html>

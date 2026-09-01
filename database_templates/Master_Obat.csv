@@ -1,1 +1,5 @@
-id_obat,nama_obat,kategori,satuan,stok_minimum,url_foto
+id_obat,nama_obat,kategori,golongan,komposisi,kekuatan,bentuk_sediaan,satuan_besar,satuan_kecil,stok_minimum,url_foto
+OBT-1001,Paracetamol,OBAT,Bebas,Paracetamol,500 mg,Tablet,Box,Tablet,10,
+OBT-1002,Amoxicillin,OBAT,Keras,Amoxicillin Trihydrate,500 mg,Kapsul,Box,Kapsul,5,
+OBT-1003,Sirup OBH,OBAT,Bebas Terbatas,Paracetamol + Succus Liquiritiae,60 ml,Sirup,Botol,Botol,15,
+OBT-1004,Masker Medis 3-Ply Earloop,ALKES,-,-,-,-,Box,Pieces,5,

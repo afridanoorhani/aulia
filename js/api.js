@@ -1,5 +1,5 @@
 // GANTI dengan URL Web App Google Apps Script Anda yang sudah di deploy
-const API_URL = 'https://script.google.com/macros/s/AKfycbzonnXY3oxysBgr7XD6r_hiASIJPdkPNzk9oRh3z33cJwYUDdDZHOwzQHUi-nkRe2GaRw/exec'; 
+const API_URL = 'https://script.google.com/macros/s/AKfycbyTr3UQRM9yiHFeny7EXCCIPNvUD4xZcZ0V3Zjy03_OxzBgpA6eaNNo779_tZcv5oLfig/exec'; 
 
 const api = {
     // Fungsi umum untuk request GET
