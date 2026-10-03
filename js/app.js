@@ -8,6 +8,8 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     let currentUser = null;
+    let globalBatchData = [];
+    let globalTransData = [];
 
     function checkAuth() {
         const session = localStorage.getItem('apotek_user');
@@ -109,9 +111,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // --- Modal Logic ---
     const modalMaster = document.getElementById('modal-master');
     const modalEditMaster = document.getElementById('modal-edit-master');
+    const modalBatch = document.getElementById('modal-batch');
+    const modalEditBatch = document.getElementById('modal-edit-batch');
     const btnAddMaster = document.getElementById('btn-add-master');
     const closeBtns = document.querySelectorAll('.close-modal');
 
@@ -123,12 +126,16 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.addEventListener('click', () => {
             modalMaster.classList.remove('active');
             if(modalEditMaster) modalEditMaster.classList.remove('active');
+            if(modalBatch) modalBatch.classList.remove('active');
+            if(modalEditBatch) modalEditBatch.classList.remove('active');
         });
     });
 
     window.addEventListener('click', (e) => {
         if (e.target === modalMaster) modalMaster.classList.remove('active');
         if (modalEditMaster && e.target === modalEditMaster) modalEditMaster.classList.remove('active');
+        if (modalBatch && e.target === modalBatch) modalBatch.classList.remove('active');
+        if (modalEditBatch && e.target === modalEditBatch) modalEditBatch.classList.remove('active');
     });
 
     // --- Data Loading Functions (Mocked initially if API_URL not set) ---
@@ -187,7 +194,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const riwayatTbody = document.querySelector('#table-riwayat tbody');
                 if (riwayatTbody) {
                     if (transData.length === 0) {
-                        riwayatTbody.innerHTML = '<tr><td colspan="5" class="text-center">Belum ada riwayat transaksi</td></tr>';
+                        riwayatTbody.innerHTML = '<tr><td colspan="7" class="text-center">Belum ada riwayat transaksi</td></tr>';
                     } else {
                         const reversedTrans = [...transData].reverse();
                         let riwayatHtml = '';
@@ -206,11 +213,20 @@ document.addEventListener('DOMContentLoaded', () => {
                                 } catch(e) {}
                             }
 
+                            const batch = batchData.find(b => b.id_batch === t.id_batch);
+                            const noBatch = batch ? batch.no_batch : '-';
+                            let edStr = '-';
+                            if (batch && batch.tanggal_expired) {
+                                edStr = new Date(batch.tanggal_expired).toLocaleDateString('id-ID');
+                            }
+
                             riwayatHtml += `
                                 <tr>
                                     <td>${timeStr || '-'}</td>
                                     <td>${badge}</td>
                                     <td>${namaObat}</td>
+                                    <td>${noBatch}</td>
+                                    <td>${edStr}</td>
                                     <td>${t.jumlah}</td>
                                     <td>${t.keterangan || '-'}</td>
                                 </tr>
@@ -270,6 +286,42 @@ document.addEventListener('DOMContentLoaded', () => {
                         });
                     }
                 }
+
+                // Daftar Semua Batch Aktif
+                const allBatchesTbody = document.querySelector('#table-all-batches tbody');
+                if (allBatchesTbody) {
+                    allBatchesTbody.innerHTML = '';
+                    if (batchData.length === 0) {
+                        allBatchesTbody.innerHTML = '<tr><td colspan="4" class="text-center">Belum ada data batch obat.</td></tr>';
+                    } else {
+                        // calculate stock per batch
+                        const batchStockMap = {};
+                        transData.forEach(t => {
+                            if(t.id_batch) {
+                                const qty = parseInt(t.jumlah) || 0;
+                                if(!batchStockMap[t.id_batch]) batchStockMap[t.id_batch] = 0;
+                                if(t.tipe === 'Masuk') batchStockMap[t.id_batch] += qty;
+                                else if(t.tipe === 'Keluar') batchStockMap[t.id_batch] -= qty;
+                            }
+                        });
+
+                        batchData.forEach(b => {
+                            const obat = masterData.find(m => m.id_obat === b.id_obat);
+                            const namaObat = obat ? obat.nama_obat : b.id_obat;
+                            const stock = batchStockMap[b.id_batch] || 0;
+                            const edStr = b.tanggal_expired ? new Date(b.tanggal_expired).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' }) : '-';
+
+                            const tr = document.createElement('tr');
+                            tr.innerHTML = `
+                                <td>${namaObat}</td>
+                                <td>${b.no_batch}</td>
+                                <td>${edStr}</td>
+                                <td><strong>${stock}</strong></td>
+                            `;
+                            allBatchesTbody.appendChild(tr);
+                        });
+                    }
+                }
             } else {
                 document.getElementById('stat-total-obat').innerText = '-';
                 document.getElementById('stat-total-batch').innerText = '-';
@@ -287,14 +339,17 @@ document.addEventListener('DOMContentLoaded', () => {
             const colSpan = userRole === 'admin' ? 7 : 6;
             tbody.innerHTML = `<tr><td colspan="${colSpan}" class="text-center">Memuat data...</td></tr>`;
             
-            const [masterRes, transRes] = await Promise.all([
+            const [masterRes, transRes, batchRes] = await Promise.all([
                 api.fetchMasterObat(),
-                api.fetchTransaksi()
+                api.fetchTransaksi(),
+                api.fetchBatchObat()
             ]);
             
             if (masterRes.status === 'success' && (transRes.status === 'success' || transRes.status === 'error')) {
                 const masterData = masterRes.data || [];
                 const transData = transRes.data || []; // Sometimes trans is empty and returns error in my simple api wrapper if not array, just fallback
+                globalBatchData = (batchRes && batchRes.data) ? batchRes.data : [];
+                globalTransData = transData;
                 
                 // Kalkulasi stok saat ini berdasarkan history transaksi Masuk & Keluar
                 const stockMap = {};
@@ -340,6 +395,8 @@ document.addEventListener('DOMContentLoaded', () => {
                                     data-besar="${item.satuan_besar || ''}" 
                                     data-kecil="${item.satuan_kecil || ''}" 
                                     data-stokmin="${item.stok_minimum}">✏️</button>
+                                <button class="btn btn-info btn-sm btn-batch" style="padding: 2px 8px; font-size: 0.8rem; margin-left: 5px; background: #0ea5e9; border-color: #0ea5e9; color: white;" 
+                                    data-id="${item.id_obat}" data-nama="${item.nama_obat}">Batch</button>
                                 <button class="btn btn-danger btn-sm btn-delete" style="padding: 2px 8px; font-size: 0.8rem; margin-left: 5px;" data-id="${item.id_obat}">🗑️</button>
                             </td>
                         `;
@@ -365,6 +422,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 outSelect.innerHTML = optionsHtml;
                 inSelect.innerHTML = optionsHtml;
+
+                if (window.jQuery && window.jQuery.fn.select2) {
+                    $('#in-obat').select2();
+                    $('#out-obat').select2();
+                }
+
+                // Trigger change to populate batches if any
+                $('#out-obat').trigger('change');
             } else {
                 tbody.innerHTML = `<tr><td colspan="${colSpan}" class="text-center text-danger">Gagal memuat data</td></tr>`;
             }
@@ -412,7 +477,135 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('modal-edit-master').classList.add('active');
             return;
         }
+
+        const btnBatch = e.target.closest('.btn-batch');
+        if (btnBatch) {
+            const id_obat = btnBatch.getAttribute('data-id');
+            const nama_obat = btnBatch.getAttribute('data-nama');
+            document.getElementById('batch-nama-obat').innerText = nama_obat;
+            
+            const tbody = document.querySelector('#table-batch-list tbody');
+            tbody.innerHTML = '';
+            const batches = globalBatchData.filter(b => b.id_obat === id_obat);
+            
+            if(batches.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" class="text-center">Belum ada batch</td></tr>';
+            } else {
+                batches.forEach(b => {
+                    const edStr = b.tanggal_expired ? new Date(b.tanggal_expired).toLocaleDateString('id-ID') : '-';
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${b.no_batch}</td>
+                            <td>${edStr}</td>
+                            <td>
+                                <button class="btn btn-primary btn-sm btn-edit-batch" style="padding: 2px 8px; font-size: 0.8rem;" 
+                                    data-id="${b.id_batch}" data-idobat="${b.id_obat}" data-no="${b.no_batch}" data-ed="${b.tanggal_expired}">✏️ Edit</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+            document.getElementById('modal-batch').classList.add('active');
+            return;
+        }
     });
+
+    // --- Modal Batch Edit Logic ---
+    const tableBatchList = document.querySelector('#table-batch-list tbody');
+    if(tableBatchList) {
+        tableBatchList.addEventListener('click', (e) => {
+            const btnEditBatch = e.target.closest('.btn-edit-batch');
+            if (btnEditBatch) {
+                document.getElementById('edit-batch-id').value = btnEditBatch.getAttribute('data-id');
+                document.getElementById('edit-batch-id-obat').value = btnEditBatch.getAttribute('data-idobat');
+                document.getElementById('edit-batch-no').value = btnEditBatch.getAttribute('data-no');
+                
+                let ed = btnEditBatch.getAttribute('data-ed');
+                if(ed) {
+                    try {
+                        const d = new Date(ed);
+                        const yyyy = d.getFullYear();
+                        const mm = String(d.getMonth() + 1).padStart(2, '0');
+                        const dd = String(d.getDate()).padStart(2, '0');
+                        ed = `${yyyy}-${mm}-${dd}`;
+                    } catch(err) {}
+                }
+                document.getElementById('edit-batch-ed').value = ed || '';
+                document.getElementById('modal-edit-batch').classList.add('active');
+            }
+        });
+    }
+
+    document.getElementById('form-edit-batch').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('btn-submit-edit-batch');
+        btn.innerText = 'Menyimpan...';
+        btn.disabled = true;
+
+        const data = {
+            id_batch: document.getElementById('edit-batch-id').value,
+            no_batch: document.getElementById('edit-batch-no').value,
+            tanggal_expired: document.getElementById('edit-batch-ed').value
+        };
+
+        try {
+            const res = await api.editBatchObat(data);
+            if(res.status === 'success') {
+                alert('Batch berhasil diubah!');
+                document.getElementById('modal-edit-batch').classList.remove('active');
+                
+                // Refresh data
+                await loadDashboard();
+                await loadMasterObat();
+
+                // refresh modal batch list
+                const id_obat = document.getElementById('edit-batch-id-obat').value;
+                const tbody = document.querySelector('#table-batch-list tbody');
+                tbody.innerHTML = '';
+                const batches = globalBatchData.filter(b => b.id_obat === id_obat);
+                batches.forEach(b => {
+                    const edStr = b.tanggal_expired ? new Date(b.tanggal_expired).toLocaleDateString('id-ID') : '-';
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${b.no_batch}</td>
+                            <td>${edStr}</td>
+                            <td>
+                                <button class="btn btn-primary btn-sm btn-edit-batch" style="padding: 2px 8px; font-size: 0.8rem;" 
+                                    data-id="${b.id_batch}" data-idobat="${b.id_obat}" data-no="${b.no_batch}" data-ed="${b.tanggal_expired}">✏️ Edit</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } else {
+                alert('Gagal: ' + res.message);
+            }
+        } catch (err) {
+            alert('Terjadi kesalahan saat mengedit batch.');
+        } finally {
+            btn.innerText = 'Simpan Perubahan Batch';
+            btn.disabled = false;
+        }
+    });
+
+    // --- Outbound Obat Change (Populate Batch) ---
+    if(window.jQuery) {
+        $('#out-obat').on('change', function() {
+            const id_obat = $(this).val();
+            const batchSelect = document.getElementById('out-batch');
+            batchSelect.innerHTML = '<option value="">-- Pilih Batch --</option>';
+            if(!id_obat) return;
+
+            const batches = globalBatchData.filter(b => b.id_obat === id_obat);
+            batches.forEach(b => {
+                const edStr = b.tanggal_expired ? new Date(b.tanggal_expired).toLocaleDateString('id-ID') : '-';
+                // Hitung stok per batch? Opsional, tapi kita tampilkan ED saja
+                batchSelect.innerHTML += `<option value="${b.id_batch}">${b.no_batch} (ED: ${edStr})</option>`;
+            });
+            if (window.jQuery.fn.select2) {
+                $('#out-batch').select2();
+            }
+        });
+    }
 
     // --- Search Master Obat ---
     const searchMaster = document.getElementById('search-master');
@@ -422,6 +615,42 @@ document.addEventListener('DOMContentLoaded', () => {
             const rows = document.querySelectorAll('#table-master tbody tr');
             rows.forEach(row => {
                 if(row.children.length === 1) return; // Skip loading/empty rows
+                const text = row.innerText.toLowerCase();
+                if(text.includes(term)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+    }
+
+    // --- Search Batch di Dashboard ---
+    const searchBatchDashboard = document.getElementById('search-batch-dashboard');
+    if (searchBatchDashboard) {
+        searchBatchDashboard.addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('#table-all-batches tbody tr');
+            rows.forEach(row => {
+                if(row.children.length === 1) return; 
+                const text = row.innerText.toLowerCase();
+                if(text.includes(term)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+    }
+
+    // --- Search Low Stock di Dashboard ---
+    const searchLowstockDashboard = document.getElementById('search-lowstock-dashboard');
+    if (searchLowstockDashboard) {
+        searchLowstockDashboard.addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('#table-lowstock tbody tr');
+            rows.forEach(row => {
+                if(row.children.length === 1) return; 
                 const text = row.innerText.toLowerCase();
                 if(text.includes(term)) {
                     row.style.display = '';
@@ -570,6 +799,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const data = {
             tipe: 'Keluar',
             id_obat: document.getElementById('out-obat').value,
+            id_batch: document.getElementById('out-batch').value,
             jumlah: parseInt(document.getElementById('out-jumlah').value),
             keterangan: document.getElementById('out-ket').value
         };

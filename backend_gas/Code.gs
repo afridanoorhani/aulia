@@ -37,6 +37,8 @@ function doPost(e) {
       return addTransaction(body.data);
     } else if (action === 'uploadImage') {
       return uploadImage(body.data);
+    } else if (action === 'editBatch') {
+      return editBatch(body.data);
     }
 
     return createJsonResponse({ status: 'error', message: 'Invalid action' });
@@ -150,31 +152,32 @@ function deleteMasterObat(data) {
 
 function addTransaction(data) {
   const ss = SpreadsheetApp.openById(SHEET_ID);
-  const sheet = ss.getSheetByName('Transaksi');
   
   const id_trans = 'TRX-' + new Date().getTime();
   const timestamp = new Date().toISOString();
-  
-  sheet.appendRow([
-    id_trans,
-    timestamp,
-    data.tipe, 
-    data.id_obat,
-    data.id_batch || '',
-    data.jumlah,
-    data.keterangan || ''
-  ]);
+  let id_batch_to_save = data.id_batch || '';
   
   if (data.tipe === 'Masuk' && data.no_batch) {
     const batchSheet = ss.getSheetByName('Batch_Obat');
-    const id_batch = 'BCH-' + new Date().getTime();
+    id_batch_to_save = 'BCH-' + new Date().getTime();
     batchSheet.appendRow([
-      id_batch,
+      id_batch_to_save,
       data.id_obat,
       data.no_batch,
       data.tanggal_expired || ''
     ]);
   }
+
+  const sheet = ss.getSheetByName('Transaksi');
+  sheet.appendRow([
+    id_trans,
+    timestamp,
+    data.tipe, 
+    data.id_obat,
+    id_batch_to_save,
+    data.jumlah,
+    data.keterangan || ''
+  ]);
   
   return createJsonResponse({ status: 'success', message: 'Transaksi berhasil dicatat' });
 }
@@ -197,4 +200,22 @@ function uploadImage(data) {
   } catch (error) {
     return createJsonResponse({ status: 'error', message: 'Gagal upload: ' + error.toString() });
   }
+}
+
+function editBatch(data) {
+  const sheet = SpreadsheetApp.openById(SHEET_ID).getSheetByName('Batch_Obat');
+  const values = sheet.getDataRange().getValues();
+  
+  for (let i = 1; i < values.length; i++) {
+    if (values[i][0] === data.id_batch) {
+      const rowNum = i + 1;
+      
+      const no_batch = data.no_batch !== undefined ? data.no_batch : values[i][2];
+      const tanggal_expired = data.tanggal_expired !== undefined ? data.tanggal_expired : values[i][3];
+      
+      sheet.getRange(rowNum, 3, 1, 2).setValues([[no_batch, tanggal_expired]]);
+      return createJsonResponse({ status: 'success', message: 'Batch berhasil diubah' });
+    }
+  }
+  return createJsonResponse({ status: 'error', message: 'Batch tidak ditemukan' });
 }

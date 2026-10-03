@@ -1,5 +1,5 @@
 // GANTI dengan URL Web App Google Apps Script Anda yang sudah di deploy
-const API_URL = 'https://script.google.com/macros/s/AKfycbyTr3UQRM9yiHFeny7EXCCIPNvUD4xZcZ0V3Zjy03_OxzBgpA6eaNNo779_tZcv5oLfig/exec'; 
+const API_URL = 'https://script.google.com/macros/s/AKfycby186g_HB6xmXAfbZkCG2aQRvKT0Ff_hTLf9C0g380syxPD7FS0DGU3YSL9CrsK-IE7iw/exec'; 
 
 const api = {
     // Fungsi umum untuk request GET
@@ -55,6 +55,9 @@ const api = {
     },
     async fetchBatchObat() {
         return this.get('getData', 'Batch_Obat');
+    },
+    async editBatchObat(data) {
+        return this.post('editBatch', data);
     },
 
     // Menambah master obat
