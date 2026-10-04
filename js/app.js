@@ -1,4 +1,73 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // --- Toast Notification System ---
+    function showToast(type, title, message, duration = 4000) {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+
+        const icons = {
+            success: '✅',
+            error: '❌',
+            warning: '⚠️',
+            info: 'ℹ️'
+        };
+
+        toast.innerHTML = `
+            <div class="toast-icon">${icons[type] || 'ℹ️'}</div>
+            <div class="toast-body">
+                <div class="toast-title">${title}</div>
+                <div class="toast-message">${message}</div>
+            </div>
+            <button class="toast-close" onclick="this.parentElement.remove()">&times;</button>
+            <div class="toast-progress"></div>
+        `;
+
+        container.appendChild(toast);
+
+        setTimeout(() => {
+            toast.style.animation = 'toastOut 0.3s ease forwards';
+            setTimeout(() => toast.remove(), 300);
+        }, duration);
+    }
+
+    // --- Custom Confirm Dialog ---
+    function showConfirm(title, message, onConfirm, type = 'warning') {
+        const overlay = document.createElement('div');
+        overlay.className = 'confirm-dialog-overlay';
+
+        const icons = {
+            warning: '⚠️',
+            danger: '🗑️'
+        };
+
+        overlay.innerHTML = `
+            <div class="confirm-dialog">
+                <div class="confirm-dialog-icon ${type}">${icons[type] || '⚠️'}</div>
+                <h3>${title}</h3>
+                <p>${message}</p>
+                <div class="confirm-dialog-buttons">
+                    <button class="btn btn-secondary" id="confirm-cancel">Batal</button>
+                    <button class="btn ${type === 'danger' ? 'btn-danger' : 'btn-primary'}" id="confirm-ok">Ya, Lanjutkan</button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(overlay);
+
+        overlay.querySelector('#confirm-cancel').addEventListener('click', () => {
+            overlay.remove();
+        });
+
+        overlay.querySelector('#confirm-ok').addEventListener('click', () => {
+            overlay.remove();
+            onConfirm();
+        });
+
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) overlay.remove();
+        });
+    }
+
     // --- Authentication & RBAC Logic ---
     const users = {
         'admin': { role: 'admin', name: 'Super Admin', pwd: '123' },
@@ -43,6 +112,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // Load Data
         loadDashboard();
         loadMasterObat();
+
+        // Welcome toast
+        showToast('success', 'Selamat Datang!', `Login sebagai ${currentUser.name}`, 3000);
     }
 
     function applyRolePermissions() {
@@ -76,12 +148,30 @@ document.addEventListener('DOMContentLoaded', () => {
             showApp();
         } else {
             err.style.display = 'block';
+            // Shake animation
+            const loginCard = document.querySelector('.login-card');
+            loginCard.style.animation = 'none';
+            loginCard.offsetHeight; // trigger reflow
+            loginCard.style.animation = 'shake 0.5s ease';
         }
     });
 
+    // Add shake animation
+    const shakeStyle = document.createElement('style');
+    shakeStyle.textContent = `
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+    `;
+    document.head.appendChild(shakeStyle);
+
     document.getElementById('btn-logout').addEventListener('click', () => {
-        localStorage.removeItem('apotek_user');
-        window.location.reload();
+        showConfirm('Logout', 'Apakah Anda yakin ingin keluar dari sistem?', () => {
+            localStorage.removeItem('apotek_user');
+            window.location.reload();
+        });
     });
 
     // --- Navigation Logic ---
@@ -102,8 +192,9 @@ document.addEventListener('DOMContentLoaded', () => {
             pageSections.forEach(sec => sec.classList.remove('active'));
             document.getElementById(targetId).classList.add('active');
 
-            // Update title
-            pageTitle.innerText = e.currentTarget.innerText;
+            // Update title - get text content without SVG
+            const navText = e.currentTarget.textContent.trim();
+            pageTitle.innerText = navText;
             
             // Refresh Data based on view
             if(targetId === 'dashboard') loadDashboard();
@@ -138,7 +229,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (modalEditBatch && e.target === modalEditBatch) modalEditBatch.classList.remove('active');
     });
 
-    // --- Data Loading Functions (Mocked initially if API_URL not set) ---
+    // --- Data Loading Functions ---
     async function loadDashboard() {
         try {
             const [masterRes, transRes, batchRes] = await Promise.all([
@@ -171,30 +262,33 @@ document.addEventListener('DOMContentLoaded', () => {
                     const stokMin = parseInt(item.stok_minimum) || 0;
                     if(currStock <= stokMin) {
                         lowStockCount++;
+                        const statusClass = currStock === 0 ? 'badge-danger' : 'badge-warning';
+                        const statusText = currStock === 0 ? 'Habis' : 'Stok Kritis';
                         lowStockHtml += `
                             <tr>
                                 <td>${item.nama_obat}</td>
                                 <td><strong style="color:var(--danger);">${currStock}</strong></td>
                                 <td>${stokMin}</td>
-                                <td><span style="background:var(--danger); color:white; padding:2px 8px; border-radius:4px; font-size:0.8rem;">Stok Kritis</span></td>
+                                <td><span class="badge ${statusClass}">${statusText}</span></td>
                             </tr>
                         `;
                     }
                 });
 
-                document.getElementById('stat-total-obat').innerText = masterData.length;
-                document.getElementById('stat-total-batch').innerText = batchData.length;
-                document.getElementById('stat-low-stock').innerText = lowStockCount;
+                // Animate stat counters
+                animateCounter('stat-total-obat', masterData.length);
+                animateCounter('stat-total-batch', batchData.length);
+                animateCounter('stat-low-stock', lowStockCount);
 
                 if (lowStockTbody) {
-                    lowStockTbody.innerHTML = lowStockHtml || '<tr><td colspan="4" class="text-center">Semua stok aman.</td></tr>';
+                    lowStockTbody.innerHTML = lowStockHtml || '<tr><td colspan="4" class="text-center" style="padding: 32px; color: var(--gray);">✅ Semua stok aman.</td></tr>';
                 }
 
                 // Render Riwayat Transaksi
                 const riwayatTbody = document.querySelector('#table-riwayat tbody');
                 if (riwayatTbody) {
                     if (transData.length === 0) {
-                        riwayatTbody.innerHTML = '<tr><td colspan="7" class="text-center">Belum ada riwayat transaksi</td></tr>';
+                        riwayatTbody.innerHTML = '<tr><td colspan="7" class="text-center" style="padding: 32px; color: var(--gray);">Belum ada riwayat transaksi</td></tr>';
                     } else {
                         const reversedTrans = [...transData].reverse();
                         let riwayatHtml = '';
@@ -202,8 +296,8 @@ document.addEventListener('DOMContentLoaded', () => {
                             const obat = masterData.find(m => m.id_obat === t.id_obat);
                             const namaObat = obat ? obat.nama_obat : t.id_obat;
                             const badge = t.tipe === 'Masuk' ? 
-                                '<span style="background:#10b981; color:white; padding:2px 8px; border-radius:4px; font-size:0.8rem;">Masuk</span>' : 
-                                '<span style="background:#ef4444; color:white; padding:2px 8px; border-radius:4px; font-size:0.8rem;">Keluar</span>';
+                                '<span class="badge badge-success">↓ Masuk</span>' : 
+                                '<span class="badge badge-danger">↑ Keluar</span>';
                             
                             let timeStr = t.timestamp;
                             if(timeStr) {
@@ -227,7 +321,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                     <td>${namaObat}</td>
                                     <td>${noBatch}</td>
                                     <td>${edStr}</td>
-                                    <td>${t.jumlah}</td>
+                                    <td><strong>${t.jumlah}</strong></td>
                                     <td>${t.keterangan || '-'}</td>
                                 </tr>
                             `;
@@ -266,13 +360,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     expiringBatches.sort((a, b) => a.expDate - b.expDate);
 
                     if(expiringBatches.length === 0) {
-                        expireTbody.innerHTML = '<tr><td colspan="4" class="text-center">Tidak ada obat yang mendekati masa kedaluwarsa.</td></tr>';
+                        expireTbody.innerHTML = '<tr><td colspan="4" class="text-center" style="padding: 32px; color: var(--gray);">✅ Tidak ada obat yang mendekati masa kedaluwarsa.</td></tr>';
                     } else {
                         expiringBatches.forEach(b => {
                             const tr = document.createElement('tr');
                             const statusBadge = b.is_expired ? 
-                                '<span style="background:var(--danger); color:white; padding:2px 8px; border-radius:4px; font-size:0.8rem;">Sudah Kedaluwarsa</span>' : 
-                                '<span style="background:#f59e0b; color:white; padding:2px 8px; border-radius:4px; font-size:0.8rem;">Segera Kedaluwarsa</span>';
+                                '<span class="badge badge-danger">Sudah Kedaluwarsa</span>' : 
+                                '<span class="badge badge-warning">Segera Kedaluwarsa</span>';
                             
                             const formattedDate = b.expDate.toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' });
                             
@@ -292,7 +386,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (allBatchesTbody) {
                     allBatchesTbody.innerHTML = '';
                     if (batchData.length === 0) {
-                        allBatchesTbody.innerHTML = '<tr><td colspan="4" class="text-center">Belum ada data batch obat.</td></tr>';
+                        allBatchesTbody.innerHTML = '<tr><td colspan="4" class="text-center" style="padding: 32px; color: var(--gray);">Belum ada data batch obat.</td></tr>';
                     } else {
                         // calculate stock per batch
                         const batchStockMap = {};
@@ -316,7 +410,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <td>${namaObat}</td>
                                 <td>${b.no_batch}</td>
                                 <td>${edStr}</td>
-                                <td><strong>${stock}</strong></td>
+                                <td><strong style="color: ${stock <= 0 ? 'var(--danger)' : 'var(--dark)'}">${stock}</strong></td>
                             `;
                             allBatchesTbody.appendChild(tr);
                         });
@@ -329,7 +423,35 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (e) {
             console.log("Error loading dashboard", e);
+            showToast('error', 'Gagal Memuat', 'Tidak dapat memuat data dashboard. Periksa koneksi Anda.');
         }
+    }
+
+    // --- Animated Counter ---
+    function animateCounter(elementId, targetValue) {
+        const el = document.getElementById(elementId);
+        if (!el) return;
+        
+        const start = parseInt(el.innerText) || 0;
+        const duration = 600;
+        const startTime = performance.now();
+
+        function update(currentTime) {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            
+            // Ease out cubic
+            const eased = 1 - Math.pow(1 - progress, 3);
+            const current = Math.round(start + (targetValue - start) * eased);
+            
+            el.innerText = current;
+            
+            if (progress < 1) {
+                requestAnimationFrame(update);
+            }
+        }
+
+        requestAnimationFrame(update);
     }
 
     async function loadMasterObat() {
@@ -337,7 +459,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const tbody = document.querySelector('#table-master tbody');
             const userRole = currentUser ? currentUser.role : null;
             const colSpan = userRole === 'admin' ? 7 : 6;
-            tbody.innerHTML = `<tr><td colspan="${colSpan}" class="text-center">Memuat data...</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="${colSpan}" class="text-center" style="padding: 32px; color: var(--gray);">
+                <div class="spinner" style="margin: 0 auto 12px; width: 32px; height: 32px;"></div>
+                Memuat data...
+            </td></tr>`;
             
             const [masterRes, transRes, batchRes] = await Promise.all([
                 api.fetchMasterObat(),
@@ -347,7 +472,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (masterRes.status === 'success' && (transRes.status === 'success' || transRes.status === 'error')) {
                 const masterData = masterRes.data || [];
-                const transData = transRes.data || []; // Sometimes trans is empty and returns error in my simple api wrapper if not array, just fallback
+                const transData = transRes.data || [];
                 globalBatchData = (batchRes && batchRes.data) ? batchRes.data : [];
                 globalTransData = transData;
                 
@@ -368,7 +493,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 let optionsHtml = '<option value="">-- Pilih Obat --</option>';
 
                 if (masterData.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="${colSpan}" class="text-center">Belum ada data obat</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="${colSpan}" class="text-center" style="padding: 32px; color: var(--gray);">Belum ada data obat</td></tr>`;
                     outSelect.innerHTML = optionsHtml;
                     inSelect.innerHTML = optionsHtml;
                     return;
@@ -384,36 +509,42 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (userRole === 'admin') {
                         aksiCol = `
                             <td>
-                                <button class="btn btn-primary btn-sm btn-edit" style="padding: 2px 8px; font-size: 0.8rem;" 
-                                    data-id="${item.id_obat}" 
-                                    data-nama="${item.nama_obat}" 
-                                    data-kategori="${item.kategori}" 
-                                    data-golongan="${item.golongan || ''}" 
-                                    data-komposisi="${item.komposisi || ''}" 
-                                    data-kekuatan="${item.kekuatan || ''}" 
-                                    data-bentuk="${item.bentuk_sediaan || ''}" 
-                                    data-besar="${item.satuan_besar || ''}" 
-                                    data-kecil="${item.satuan_kecil || ''}" 
-                                    data-stokmin="${item.stok_minimum}">✏️</button>
-                                <button class="btn btn-info btn-sm btn-batch" style="padding: 2px 8px; font-size: 0.8rem; margin-left: 5px; background: #0ea5e9; border-color: #0ea5e9; color: white;" 
-                                    data-id="${item.id_obat}" data-nama="${item.nama_obat}">Batch</button>
-                                <button class="btn btn-danger btn-sm btn-delete" style="padding: 2px 8px; font-size: 0.8rem; margin-left: 5px;" data-id="${item.id_obat}">🗑️</button>
+                                <div style="display: flex; gap: 6px; flex-wrap: nowrap;">
+                                    <button class="btn btn-primary btn-sm btn-edit" style="padding: 6px 10px; font-size: 0.78rem; min-width: auto; width: auto;" 
+                                        data-id="${item.id_obat}" 
+                                        data-nama="${item.nama_obat}" 
+                                        data-kategori="${item.kategori}" 
+                                        data-golongan="${item.golongan || ''}" 
+                                        data-komposisi="${item.komposisi || ''}" 
+                                        data-kekuatan="${item.kekuatan || ''}" 
+                                        data-bentuk="${item.bentuk_sediaan || ''}" 
+                                        data-besar="${item.satuan_besar || ''}" 
+                                        data-kecil="${item.satuan_kecil || ''}" 
+                                        data-stokmin="${item.stok_minimum}">✏️</button>
+                                    <button class="btn btn-sm btn-batch" style="padding: 6px 10px; font-size: 0.78rem; min-width: auto; width: auto; background: var(--info-light); color: var(--info); border: 1px solid transparent; font-weight: 600;" 
+                                        data-id="${item.id_obat}" data-nama="${item.nama_obat}">Batch</button>
+                                    <button class="btn btn-danger btn-sm btn-delete" style="padding: 6px 10px; font-size: 0.78rem; min-width: auto; width: auto;" data-id="${item.id_obat}">🗑️</button>
+                                </div>
                             </td>
                         `;
                     }
 
+                    const stockBadge = isLow 
+                        ? `<span class="badge badge-danger">${currStock}</span>` 
+                        : `<strong style="color: var(--success);">${currStock}</strong>`;
+
                     tr.innerHTML = `
-                        <td>${item.id_obat}</td>
+                        <td style="font-family: monospace; font-size: 0.82rem; color: var(--gray);">${item.id_obat}</td>
                         <td>
-                            <div style="display: flex; align-items: center; gap: 10px;">
-                                <span>${item.nama_obat}</span>
-                                ${item.url_foto ? `<a href="${item.url_foto}" target="_blank" style="text-decoration: none; font-size: 0.85rem; padding: 2px 6px; background: var(--light); border-radius: 4px; color: var(--primary);">🖼️ Lihat</a>` : ''}
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span style="font-weight: 600;">${item.nama_obat}</span>
+                                ${item.url_foto ? `<a href="${item.url_foto}" target="_blank" style="text-decoration: none; font-size: 0.8rem; padding: 2px 8px; background: var(--primary-50); border-radius: 6px; color: var(--primary); font-weight: 500;">🖼️ Foto</a>` : ''}
                             </div>
                         </td>
-                        <td>${item.kategori}</td>
+                        <td><span class="badge badge-info">${item.kategori}</span></td>
                         <td>${item.satuan_besar || '-'} / ${item.satuan_kecil || '-'}</td>
                         <td>${item.stok_minimum}</td>
-                        <td style="color: ${isLow ? 'var(--danger)' : 'inherit'}; font-weight: 600;">${currStock}</td>
+                        <td>${stockBadge}</td>
                         ${aksiCol}
                     `;
                     tbody.appendChild(tr);
@@ -431,10 +562,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Trigger change to populate batches if any
                 $('#out-obat').trigger('change');
             } else {
-                tbody.innerHTML = `<tr><td colspan="${colSpan}" class="text-center text-danger">Gagal memuat data</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="${colSpan}" class="text-center" style="padding: 32px; color: var(--danger);">Gagal memuat data</td></tr>`;
             }
         } catch (error) {
             console.error(error);
+            showToast('error', 'Error', 'Gagal memuat data Master Obat.');
         }
     }
 
@@ -443,22 +575,27 @@ document.addEventListener('DOMContentLoaded', () => {
         const btnDelete = e.target.closest('.btn-delete');
         if (btnDelete) {
             const id = btnDelete.getAttribute('data-id');
-            if (confirm(`Apakah Anda yakin ingin menghapus data Obat ID: ${id}?\n\nPERINGATAN: Tindakan ini tidak dapat dibatalkan.`)) {
-                btnDelete.innerText = '⏳';
-                try {
-                    const res = await api.deleteMasterObat(id);
-                    if (res && res.status === 'success') {
-                        alert('Obat berhasil dihapus!');
-                        loadMasterObat();
-                        loadDashboard();
-                    } else {
-                        alert('Gagal menghapus obat: ' + (res ? res.message : 'Unknown error'));
+            showConfirm(
+                'Hapus Obat',
+                `Apakah Anda yakin ingin menghapus data Obat ID: <strong>${id}</strong>? Tindakan ini tidak dapat dibatalkan.`,
+                async () => {
+                    btnDelete.innerText = '⏳';
+                    try {
+                        const res = await api.deleteMasterObat(id);
+                        if (res && res.status === 'success') {
+                            showToast('success', 'Berhasil', 'Obat berhasil dihapus dari database.');
+                            loadMasterObat();
+                            loadDashboard();
+                        } else {
+                            showToast('error', 'Gagal', 'Gagal menghapus obat: ' + (res ? res.message : 'Unknown error'));
+                        }
+                    } catch (err) {
+                        showToast('error', 'Error', 'Terjadi kesalahan saat menghapus data.');
                     }
-                } catch (err) {
-                    alert('Terjadi kesalahan saat menghapus data.');
-                }
-                btnDelete.innerText = '🗑️';
-            }
+                    btnDelete.innerText = '🗑️';
+                },
+                'danger'
+            );
             return;
         }
 
@@ -489,16 +626,16 @@ document.addEventListener('DOMContentLoaded', () => {
             const batches = globalBatchData.filter(b => b.id_obat === id_obat);
             
             if(batches.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="3" class="text-center">Belum ada batch</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="3" class="text-center" style="padding: 24px; color: var(--gray);">Belum ada batch</td></tr>';
             } else {
                 batches.forEach(b => {
                     const edStr = b.tanggal_expired ? new Date(b.tanggal_expired).toLocaleDateString('id-ID') : '-';
                     tbody.innerHTML += `
                         <tr>
-                            <td>${b.no_batch}</td>
+                            <td style="font-family: monospace;">${b.no_batch}</td>
                             <td>${edStr}</td>
                             <td>
-                                <button class="btn btn-primary btn-sm btn-edit-batch" style="padding: 2px 8px; font-size: 0.8rem;" 
+                                <button class="btn btn-primary btn-sm btn-edit-batch" style="padding: 5px 12px; font-size: 0.78rem; min-width: auto; width: auto;" 
                                     data-id="${b.id_batch}" data-idobat="${b.id_obat}" data-no="${b.no_batch}" data-ed="${b.tanggal_expired}">✏️ Edit</button>
                             </td>
                         </tr>
@@ -539,7 +676,8 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('form-edit-batch').addEventListener('submit', async (e) => {
         e.preventDefault();
         const btn = document.getElementById('btn-submit-edit-batch');
-        btn.innerText = 'Menyimpan...';
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<div class="spinner" style="width: 18px; height: 18px; margin: 0 auto;"></div> Menyimpan...';
         btn.disabled = true;
 
         const data = {
@@ -551,7 +689,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const res = await api.editBatchObat(data);
             if(res.status === 'success') {
-                alert('Batch berhasil diubah!');
+                showToast('success', 'Berhasil', 'Batch berhasil diubah!');
                 document.getElementById('modal-edit-batch').classList.remove('active');
                 
                 // Refresh data
@@ -567,22 +705,22 @@ document.addEventListener('DOMContentLoaded', () => {
                     const edStr = b.tanggal_expired ? new Date(b.tanggal_expired).toLocaleDateString('id-ID') : '-';
                     tbody.innerHTML += `
                         <tr>
-                            <td>${b.no_batch}</td>
+                            <td style="font-family: monospace;">${b.no_batch}</td>
                             <td>${edStr}</td>
                             <td>
-                                <button class="btn btn-primary btn-sm btn-edit-batch" style="padding: 2px 8px; font-size: 0.8rem;" 
+                                <button class="btn btn-primary btn-sm btn-edit-batch" style="padding: 5px 12px; font-size: 0.78rem; min-width: auto; width: auto;" 
                                     data-id="${b.id_batch}" data-idobat="${b.id_obat}" data-no="${b.no_batch}" data-ed="${b.tanggal_expired}">✏️ Edit</button>
                             </td>
                         </tr>
                     `;
                 });
             } else {
-                alert('Gagal: ' + res.message);
+                showToast('error', 'Gagal', 'Gagal mengubah batch: ' + res.message);
             }
         } catch (err) {
-            alert('Terjadi kesalahan saat mengedit batch.');
+            showToast('error', 'Error', 'Terjadi kesalahan saat mengedit batch.');
         } finally {
-            btn.innerText = 'Simpan Perubahan Batch';
+            btn.innerHTML = originalText;
             btn.disabled = false;
         }
     });
@@ -598,7 +736,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const batches = globalBatchData.filter(b => b.id_obat === id_obat);
             batches.forEach(b => {
                 const edStr = b.tanggal_expired ? new Date(b.tanggal_expired).toLocaleDateString('id-ID') : '-';
-                // Hitung stok per batch? Opsional, tapi kita tampilkan ED saja
                 batchSelect.innerHTML += `<option value="${b.id_batch}">${b.no_batch} (ED: ${edStr})</option>`;
             });
             if (window.jQuery.fn.select2) {
@@ -661,13 +798,32 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // --- Search Riwayat Transaksi ---
+    const searchRiwayat = document.getElementById('search-riwayat');
+    if (searchRiwayat) {
+        searchRiwayat.addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('#table-riwayat tbody tr');
+            rows.forEach(row => {
+                if(row.children.length === 1) return; 
+                const text = row.innerText.toLowerCase();
+                if(text.includes(term)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+    }
+
     // --- Form Submissions ---
 
     // Master Obat Submit
     document.getElementById('form-master').addEventListener('submit', async (e) => {
         e.preventDefault();
         const btn = document.getElementById('btn-submit-master');
-        btn.innerText = 'Menyimpan...';
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<div class="spinner" style="width: 18px; height: 18px; margin: 0 auto;"></div> Menyimpan...';
         btn.disabled = true;
 
         const data = {
@@ -686,25 +842,25 @@ document.addEventListener('DOMContentLoaded', () => {
         const fileInput = document.getElementById('m-foto');
         try {
             if(fileInput.files.length > 0) {
-                btn.innerText = 'Mengupload Foto...';
+                btn.innerHTML = '<div class="spinner" style="width: 18px; height: 18px; margin: 0 auto;"></div> Mengupload Foto...';
                 const uploadRes = await api.uploadImage(fileInput.files[0]);
                 if(uploadRes.status === 'success') {
                     data.url_foto = uploadRes.url;
                 }
             }
 
-            btn.innerText = 'Menyimpan Data...';
+            btn.innerHTML = '<div class="spinner" style="width: 18px; height: 18px; margin: 0 auto;"></div> Menyimpan Data...';
             const res = await api.addMasterObat(data);
             if(res.status === 'success') {
-                alert('Master Obat berhasil ditambahkan!');
+                showToast('success', 'Berhasil!', 'Master Obat berhasil ditambahkan ke database.');
                 modalMaster.classList.remove('active');
                 e.target.reset();
                 loadMasterObat(); 
             }
         } catch (err) {
-            alert('Terjadi kesalahan saat menyimpan data.');
+            showToast('error', 'Error', 'Terjadi kesalahan saat menyimpan data.');
         } finally {
-            btn.innerText = 'Simpan Master Obat';
+            btn.innerHTML = originalText;
             btn.disabled = false;
         }
     });
@@ -713,7 +869,8 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('form-edit-master').addEventListener('submit', async (e) => {
         e.preventDefault();
         const btn = document.getElementById('btn-submit-edit-master');
-        btn.innerText = 'Menyimpan...';
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<div class="spinner" style="width: 18px; height: 18px; margin: 0 auto;"></div> Menyimpan...';
         btn.disabled = true;
 
         const data = {
@@ -732,27 +889,27 @@ document.addEventListener('DOMContentLoaded', () => {
         const fileInput = document.getElementById('edit-foto');
         try {
             if(fileInput.files.length > 0) {
-                btn.innerText = 'Mengupload Foto...';
+                btn.innerHTML = '<div class="spinner" style="width: 18px; height: 18px; margin: 0 auto;"></div> Mengupload Foto...';
                 const uploadRes = await api.uploadImage(fileInput.files[0]);
                 if(uploadRes.status === 'success') {
                     data.url_foto = uploadRes.url;
                 }
             }
 
-            btn.innerText = 'Menyimpan Perubahan...';
+            btn.innerHTML = '<div class="spinner" style="width: 18px; height: 18px; margin: 0 auto;"></div> Menyimpan...';
             const res = await api.editMasterObat(data);
             if(res.status === 'success') {
-                alert('Master Obat berhasil diubah!');
+                showToast('success', 'Berhasil!', 'Master Obat berhasil diubah.');
                 document.getElementById('modal-edit-master').classList.remove('active');
                 e.target.reset();
                 loadMasterObat(); 
             } else {
-                alert('Gagal: ' + res.message);
+                showToast('error', 'Gagal', 'Gagal mengubah data: ' + res.message);
             }
         } catch (err) {
-            alert('Terjadi kesalahan saat mengedit data.');
+            showToast('error', 'Error', 'Terjadi kesalahan saat mengedit data.');
         } finally {
-            btn.innerText = 'Simpan Perubahan';
+            btn.innerHTML = originalText;
             btn.disabled = false;
         }
     });
@@ -761,7 +918,8 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('form-inbound').addEventListener('submit', async (e) => {
         e.preventDefault();
         const btn = document.getElementById('btn-submit-inbound');
-        btn.innerText = 'Menyimpan...';
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<div class="spinner" style="width: 18px; height: 18px; margin: 0 auto;"></div> Menyimpan...';
         btn.disabled = true;
 
         const data = {
@@ -776,15 +934,15 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const res = await api.addTransaction(data);
             if(res.status === 'success') {
-                alert('Barang masuk berhasil dicatat!');
+                showToast('success', 'Berhasil!', 'Barang masuk berhasil dicatat.');
                 e.target.reset();
                 loadMasterObat();
                 loadDashboard();
             }
         } catch (err) {
-            alert('Gagal mencatat transaksi.');
+            showToast('error', 'Gagal', 'Gagal mencatat transaksi.');
         } finally {
-            btn.innerText = 'Simpan Transaksi';
+            btn.innerHTML = originalText;
             btn.disabled = false;
         }
     });
@@ -793,7 +951,8 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('form-outbound').addEventListener('submit', async (e) => {
         e.preventDefault();
         const btn = document.getElementById('btn-submit-outbound');
-        btn.innerText = 'Memproses...';
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<div class="spinner" style="width: 18px; height: 18px; margin: 0 auto;"></div> Memproses...';
         btn.disabled = true;
 
         const data = {
@@ -807,15 +966,15 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const res = await api.addTransaction(data);
             if(res.status === 'success') {
-                alert('Barang keluar berhasil dicatat!');
+                showToast('success', 'Berhasil!', 'Barang keluar berhasil dicatat.');
                 e.target.reset();
                 loadMasterObat();
                 loadDashboard();
             }
         } catch (err) {
-            alert('Gagal memproses transaksi.');
+            showToast('error', 'Gagal', 'Gagal memproses transaksi.');
         } finally {
-            btn.innerText = 'Proses Barang Keluar';
+            btn.innerHTML = originalText;
             btn.disabled = false;
         }
     });
@@ -846,6 +1005,15 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
     }
+
+    // --- Keyboard Shortcuts ---
+    document.addEventListener('keydown', (e) => {
+        // Escape to close modals
+        if (e.key === 'Escape') {
+            document.querySelectorAll('.modal.active').forEach(m => m.classList.remove('active'));
+            document.querySelectorAll('.confirm-dialog-overlay').forEach(d => d.remove());
+        }
+    });
 
     // Initial Start
     setTimeout(() => {

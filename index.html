@@ -4,54 +4,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-    <title>Apotek Inventory Dashboard</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css?v=13">
+    <meta name="description" content="Sistem Manajemen Inventaris Farmasi - Instalasi Farmasi Klinik Aulia. Dashboard untuk mengelola obat, batch, dan transaksi.">
+    <meta name="theme-color" content="#0f172a">
+    <title>Apotek Inventory — Klinik Aulia</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css?v=20">
     <!-- Select2 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-    <style>
-        .select2-container .select2-selection--single {
-            height: 38px;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-        }
-
-        .select2-container--default .select2-selection--single .select2-selection__arrow {
-            height: 36px;
-        }
-
-        .select2-dropdown {
-            border: 1px solid var(--border);
-            border-radius: 8px;
-        }
-    </style>
 </head>
 
 <body>
+    <!-- Toast Container -->
+    <div class="toast-container" id="toast-container"></div>
+
     <!-- Login Screen -->
     <div id="login-screen" class="login-screen">
-        <div class="login-card glass-panel">
-            <div class="text-center" style="margin-bottom: 20px;">
+        <div class="login-card">
+            <div class="text-center" style="margin-bottom: 28px;">
                 <img src="img/logo.jpeg" alt="Logo Klinik Aulia"
-                    style="width: 80px; height: auto; margin-bottom: 15px; border-radius: 12px;">
-                <h2 style="font-size: 1.2rem; margin-bottom: 5px;">INSTALASI FARMASI<br>KLINIK AULIA</h2>
-                <p style="color: var(--gray); font-size: 0.85rem;">Silakan login untuk melanjutkan</p>
+                    style="width: 72px; height: 72px; margin-bottom: 20px;">
+                <h2>INSTALASI FARMASI<br>KLINIK AULIA</h2>
+                <p style="color: rgba(255,255,255,0.5); font-size: 0.85rem;">Silakan login untuk melanjutkan</p>
             </div>
             <form id="form-login">
                 <div class="form-group">
                     <label>Username</label>
-                    <input type="text" id="login-username" required placeholder="admin / apoteker / petugas / pemilik">
+                    <input type="text" id="login-username" required placeholder="Masukkan username Anda">
                 </div>
                 <div class="form-group">
                     <label>Password</label>
-                    <input type="password" id="login-password" required placeholder="1234">
+                    <input type="password" id="login-password" required placeholder="Masukkan password">
                 </div>
-                <button type="submit" class="btn btn-primary" style="width: 100%;">Masuk</button>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>
+                    Masuk
+                </button>
             </form>
             <div id="login-error"
-                style="color: var(--danger); margin-top: 10px; font-size: 0.85rem; text-align: center; display: none;">
+                style="margin-top: 12px; font-size: 0.85rem; text-align: center; display: none;">
                 Username atau password salah!</div>
         </div>
     </div>
@@ -64,12 +56,12 @@
         <!-- Sidebar -->
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header" style="flex-direction: column; align-items: flex-start; gap: 5px;">
-                <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="display: flex; align-items: center; gap: 12px;">
                     <img src="img/logo.jpeg" alt="Logo Klinik Aulia"
-                        style="width: 36px; height: 36px; border-radius: 8px; object-fit: cover;">
-                    <h2 style="font-size: 1rem; line-height: 1.2;">INSTALASI FARMASI<br>KLINIK AULIA</h2>
+                        style="width: 38px; height: 38px; border-radius: 10px; object-fit: cover;">
+                    <h2 style="font-size: 0.9rem; line-height: 1.3;">INSTALASI FARMASI<br>KLINIK AULIA</h2>
                 </div>
-                <div style="margin-top: 10px; font-size: 0.75rem; color: var(--gray); line-height: 1.4;">
+                <div style="margin-top: 14px; font-size: 0.72rem; color: rgba(255,255,255,0.4); line-height: 1.5;">
                     <strong>Alamat:</strong><br>
                     Jln. Pelda Bunawar Ds. Pualam Sari<br>Kec. Binuang Kab. Tapin 71183<br><br>
                     <strong>Apoteker:</strong><br>
@@ -80,41 +72,58 @@
             <nav class="sidebar-nav">
                 <!-- Dashboard is visible to all -->
                 <a href="#" class="nav-item active" data-target="dashboard"
-                    data-roles="admin,apoteker,petugas,pemilik">Dashboard</a>
+                    data-roles="admin,apoteker,petugas,pemilik">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                    Dashboard
+                </a>
 
                 <!-- Master Obat is visible to admin, apoteker, pemilik -->
-                <a href="#" class="nav-item" data-target="master" data-roles="admin,apoteker,pemilik">Master Obat</a>
+                <a href="#" class="nav-item" data-target="master" data-roles="admin,apoteker,pemilik">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19.69 14a6.9 6.9 0 0 0 .31-2V5l-8-3-8 3v7c0 5.55 3.84 10.74 8 12 .65-.2 1.29-.46 1.92-.78"></path><path d="M15 19l2 2 4-4"></path></svg>
+                    Master Obat
+                </a>
 
                 <!-- Inbound is visible to admin, apoteker -->
-                <a href="#" class="nav-item" data-target="inbound" data-roles="admin,apoteker">Barang Masuk</a>
+                <a href="#" class="nav-item" data-target="inbound" data-roles="admin,apoteker">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"></polyline><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path></svg>
+                    Barang Masuk
+                </a>
 
                 <!-- Outbound is visible to admin, apoteker, petugas -->
-                <a href="#" class="nav-item" data-target="outbound" data-roles="admin,apoteker,petugas">Barang
-                    Keluar</a>
+                <a href="#" class="nav-item" data-target="outbound" data-roles="admin,apoteker,petugas">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                    Barang Keluar
+                </a>
 
                 <!-- Riwayat Transaksi is visible to admin, apoteker, pemilik -->
-                <a href="#" class="nav-item" data-target="riwayat" data-roles="admin,apoteker,pemilik">Riwayat
-                    Transaksi</a>
+                <a href="#" class="nav-item" data-target="riwayat" data-roles="admin,apoteker,pemilik">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    Riwayat Transaksi
+                </a>
             </nav>
         </aside>
 
         <!-- Main Content -->
         <main class="main-content">
             <header class="topbar">
-                <div style="display: flex; align-items: center; gap: 15px;">
-                    <button id="btn-mobile-menu" class="btn-mobile-menu">☰</button>
+                <div style="display: flex; align-items: center; gap: 14px;">
+                    <button id="btn-mobile-menu" class="btn-mobile-menu" aria-label="Toggle Menu">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                    </button>
                     <h1 id="page-title">Dashboard</h1>
                 </div>
-                <div class="user-profile" style="display: flex; align-items: center; gap: 15px;">
+                <div class="user-profile" style="display: flex; align-items: center; gap: 14px;">
                     <div style="text-align: right;">
-                        <div id="user-name-display" style="font-weight: 600; font-size: 0.9rem;">Admin</div>
+                        <div id="user-name-display" style="font-weight: 600; font-size: 0.88rem;">Admin</div>
                         <div id="user-role-display"
                             style="font-size: 0.75rem; color: var(--gray); text-transform: capitalize;">Super Admin
                         </div>
                     </div>
                     <div class="avatar" id="user-avatar-display">A</div>
-                    <button id="btn-logout" class="btn btn-danger"
-                        style="padding: 6px 12px; font-size: 0.85rem; margin-left: 10px;">Logout</button>
+                    <button id="btn-logout">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                        Logout
+                    </button>
                 </div>
             </header>
 
@@ -146,9 +155,14 @@
                     </div>
 
                     <!-- Expiry Warning Table -->
-                    <div class="panel glass-panel" style="margin-top: 20px;">
-                        <h3 style="color: var(--danger); margin-bottom: 15px; font-size: 1.1rem;">⚠️ Peringatan Obat
-                            Mendekati Kedaluwarsa (90 Hari)</h3>
+                    <div class="panel glass-panel" style="margin-top: 24px;">
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 18px;">
+                            <div style="width: 36px; height: 36px; border-radius: 8px; background: var(--danger-light); display: flex; align-items: center; justify-content: center; font-size: 18px;">⚠️</div>
+                            <div>
+                                <h3 style="color: var(--danger); font-size: 1rem; font-weight: 700; margin: 0;">Peringatan Kedaluwarsa</h3>
+                                <p style="font-size: 0.78rem; color: var(--gray); margin: 0;">Obat mendekati kedaluwarsa (90 hari)</p>
+                            </div>
+                        </div>
                         <div class="table-responsive">
                             <table class="table" id="table-expire">
                                 <thead>
@@ -170,13 +184,18 @@
                     </div>
 
                     <!-- All Active Batches Table -->
-                    <div class="panel glass-panel" style="margin-top: 20px;">
+                    <div class="panel glass-panel" style="margin-top: 24px;">
                         <div
-                            style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 15px; gap: 10px;">
-                            <h3 style="color: var(--primary); font-size: 1.1rem; margin: 0;">📦 Informasi Batch &
-                                Kedaluwarsa Obat</h3>
+                            style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 18px; gap: 12px;">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <div style="width: 36px; height: 36px; border-radius: 8px; background: var(--info-light); display: flex; align-items: center; justify-content: center; font-size: 18px;">📦</div>
+                                <div>
+                                    <h3 style="color: var(--dark); font-size: 1rem; font-weight: 700; margin: 0;">Informasi Batch & Kedaluwarsa</h3>
+                                    <p style="font-size: 0.78rem; color: var(--gray); margin: 0;">Semua batch obat yang terdaftar</p>
+                                </div>
+                            </div>
                             <input type="text" id="search-batch-dashboard" placeholder="Cari Nama Obat..."
-                                style="min-width: 250px; padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                                style="min-width: 250px;">
                         </div>
                         <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
                             <table class="table" id="table-all-batches">
@@ -198,13 +217,18 @@
                     </div>
 
                     <!-- Low Stock Warning Table -->
-                    <div class="panel glass-panel" style="margin-top: 20px;">
+                    <div class="panel glass-panel" style="margin-top: 24px;">
                         <div
-                            style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 15px; gap: 10px;">
-                            <h3 style="color: #d97706; font-size: 1.1rem; margin: 0;">⚠️ Daftar Obat Harus Dibeli (Stok
-                                Menipis)</h3>
+                            style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 18px; gap: 12px;">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <div style="width: 36px; height: 36px; border-radius: 8px; background: var(--warning-light); display: flex; align-items: center; justify-content: center; font-size: 18px;">📉</div>
+                                <div>
+                                    <h3 style="color: var(--accent-dark); font-size: 1rem; font-weight: 700; margin: 0;">Daftar Obat Harus Dibeli</h3>
+                                    <p style="font-size: 0.78rem; color: var(--gray); margin: 0;">Stok menipis atau habis</p>
+                                </div>
+                            </div>
                             <input type="text" id="search-lowstock-dashboard" placeholder="Cari Nama Obat..."
-                                style="min-width: 250px; padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                                style="min-width: 250px;">
                         </div>
                         <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
                             <table class="table" id="table-lowstock">
@@ -230,13 +254,18 @@
                 <section id="master" class="page-section">
                     <div class="panel glass-panel">
                         <div class="panel-header" style="flex-wrap: wrap;">
-                            <h2>Daftar Obat</h2>
+                            <h2>
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19.69 14a6.9 6.9 0 0 0 .31-2V5l-8-3-8 3v7c0 5.55 3.84 10.74 8 12 .65-.2 1.29-.46 1.92-.78"></path></svg>
+                                Daftar Obat
+                            </h2>
                             <div
                                 style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center; justify-content: flex-start; width: 100%; max-width: 500px; margin-top: 10px;">
                                 <input type="text" id="search-master" placeholder="Cari Nama Obat..."
                                     style="flex: 1; min-width: 200px;">
-                                <button id="btn-add-master" class="btn btn-primary" data-roles="admin,apoteker">+ Tambah
-                                    Obat Baru</button>
+                                <button id="btn-add-master" class="btn btn-primary" data-roles="admin,apoteker">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                    Tambah Obat
+                                </button>
                             </div>
                         </div>
                         <div class="table-container">
@@ -265,7 +294,10 @@
                 <!-- Inbound Section -->
                 <section id="inbound" class="page-section">
                     <div class="panel glass-panel form-panel">
-                        <h2>Catat Barang Masuk</h2>
+                        <h2>
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"></polyline><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path></svg>
+                            Catat Barang Masuk
+                        </h2>
                         <form id="form-inbound">
                             <div class="form-group">
                                 <label>Pilih Obat</label>
@@ -284,7 +316,7 @@
                             <div class="form-row">
                                 <div class="form-group">
                                     <label>Jumlah Masuk</label>
-                                    <input type="number" id="in-jumlah" required min="1">
+                                    <input type="number" id="in-jumlah" required min="1" placeholder="0">
                                 </div>
                                 <div class="form-group">
                                     <label>Keterangan</label>
@@ -293,7 +325,10 @@
                             </div>
                             <!-- Only admin and apoteker -->
                             <button type="submit" class="btn btn-primary" id="btn-submit-inbound"
-                                data-roles="admin,apoteker">Simpan Transaksi</button>
+                                data-roles="admin,apoteker">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                                Simpan Transaksi
+                            </button>
                         </form>
                     </div>
                 </section>
@@ -301,7 +336,10 @@
                 <!-- Outbound Section -->
                 <section id="outbound" class="page-section">
                     <div class="panel glass-panel form-panel">
-                        <h2>Catat Barang Keluar</h2>
+                        <h2>
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+                            Catat Barang Keluar
+                        </h2>
                         <form id="form-outbound">
                             <div class="form-group">
                                 <label>Pilih Obat</label>
@@ -316,7 +354,7 @@
                             <div class="form-row">
                                 <div class="form-group">
                                     <label>Jumlah Keluar</label>
-                                    <input type="number" id="out-jumlah" required min="1">
+                                    <input type="number" id="out-jumlah" required min="1" placeholder="0">
                                 </div>
                                 <div class="form-group">
                                     <label>Keterangan</label>
@@ -324,7 +362,10 @@
                                 </div>
                             </div>
                             <button type="submit" class="btn btn-danger" id="btn-submit-outbound"
-                                data-roles="admin,apoteker,petugas">Proses Barang Keluar</button>
+                                data-roles="admin,apoteker,petugas">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                                Proses Barang Keluar
+                            </button>
                         </form>
                     </div>
                 </section>
@@ -332,8 +373,14 @@
                 <!-- Riwayat Transaksi Section -->
                 <section id="riwayat" class="page-section">
                     <div class="panel glass-panel">
-                        <div class="panel-header">
-                            <h2>Riwayat Transaksi</h2>
+                        <div class="panel-header" style="flex-wrap: wrap;">
+                            <h2>
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                Riwayat Transaksi
+                            </h2>
+                            <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center; justify-content: flex-start; width: 100%; max-width: 350px; margin-top: 10px;">
+                                <input type="text" id="search-riwayat" placeholder="Cari Riwayat (Obat, Tipe, Batch)..." style="flex: 1; min-width: 200px;">
+                            </div>
                         </div>
                         <div class="table-container">
                             <table id="table-riwayat">
@@ -365,11 +412,14 @@
     <div id="modal-master" class="modal">
         <div class="modal-content glass-panel">
             <span class="close-modal">&times;</span>
-            <h2>Tambah Master Obat</h2>
+            <h2>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                Tambah Master Obat
+            </h2>
             <form id="form-master">
                 <div class="form-group">
                     <label>Nama Obat</label>
-                    <input type="text" id="m-nama" required>
+                    <input type="text" id="m-nama" required placeholder="Masukkan nama obat">
                 </div>
                 <div class="form-row">
                     <div class="form-group">
@@ -396,11 +446,11 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label>Komposisi</label>
-                        <input type="text" id="m-komposisi">
+                        <input type="text" id="m-komposisi" placeholder="Opsional">
                     </div>
                     <div class="form-group">
                         <label>Kekuatan</label>
-                        <input type="text" id="m-kekuatan">
+                        <input type="text" id="m-kekuatan" placeholder="Opsional">
                     </div>
                 </div>
                 <div class="form-row">
@@ -463,7 +513,7 @@
                     </div>
                     <div class="form-group">
                         <label>Stok Minimum</label>
-                        <input type="number" id="m-stokmin" required>
+                        <input type="number" id="m-stokmin" required placeholder="0">
                     </div>
                 </div>
                 <div class="form-row">
@@ -583,7 +633,10 @@
                     <label>Foto Obat (Opsional)</label>
                     <input type="file" id="m-foto" accept="image/*">
                 </div>
-                <button type="submit" class="btn btn-primary" id="btn-submit-master">Simpan Master Obat</button>
+                <button type="submit" class="btn btn-primary" id="btn-submit-master">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                    Simpan Master Obat
+                </button>
             </form>
         </div>
     </div>
@@ -592,7 +645,10 @@
     <div id="modal-edit-master" class="modal">
         <div class="modal-content glass-panel">
             <span class="close-modal">&times;</span>
-            <h2>Edit Master Obat</h2>
+            <h2>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                Edit Master Obat
+            </h2>
             <form id="form-edit-master">
                 <input type="hidden" id="edit-id-obat">
                 <div class="form-group">
@@ -811,7 +867,10 @@
                     <label>Foto Obat (Opsional)</label>
                     <input type="file" id="edit-foto" accept="image/*">
                 </div>
-                <button type="submit" class="btn btn-primary" id="btn-submit-edit-master">Simpan Perubahan</button>
+                <button type="submit" class="btn btn-primary" id="btn-submit-edit-master">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                    Simpan Perubahan
+                </button>
             </form>
         </div>
     </div>
@@ -820,8 +879,11 @@
     <div id="modal-batch" class="modal">
         <div class="modal-content glass-panel" style="max-width: 700px;">
             <span class="close-modal">&times;</span>
-            <h2>Daftar Batch & ED</h2>
-            <h4 id="batch-nama-obat" style="margin-bottom: 15px;"></h4>
+            <h2>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+                Daftar Batch & ED
+            </h2>
+            <h4 id="batch-nama-obat" style="margin-bottom: 15px; color: var(--gray); font-size: 0.9rem;"></h4>
             <div class="table-responsive">
                 <table class="table" id="table-batch-list">
                     <thead>
@@ -843,7 +905,10 @@
     <div id="modal-edit-batch" class="modal" style="z-index: 1001;">
         <div class="modal-content glass-panel">
             <span class="close-modal">&times;</span>
-            <h2>Edit Batch</h2>
+            <h2>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                Edit Batch
+            </h2>
             <form id="form-edit-batch">
                 <input type="hidden" id="edit-batch-id">
                 <input type="hidden" id="edit-batch-id-obat">
@@ -855,15 +920,18 @@
                     <label>Tanggal Kedaluwarsa</label>
                     <input type="date" id="edit-batch-ed" required>
                 </div>
-                <button type="submit" class="btn btn-primary" id="btn-submit-edit-batch">Simpan Perubahan Batch</button>
+                <button type="submit" class="btn btn-primary" id="btn-submit-edit-batch">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                    Simpan Perubahan Batch
+                </button>
             </form>
         </div>
     </div>
 
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-    <script src="js/api.js?v=18"></script>
-    <script src="js/app.js?v=18"></script>
+    <script src="js/api.js?v=20"></script>
+    <script src="js/app.js?v=20"></script>
 </body>
 
 </html>
